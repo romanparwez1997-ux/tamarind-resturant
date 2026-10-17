@@ -1,0 +1,177 @@
+
+
+export const dishes = [
+  // ---- Starters ----
+  {
+    id: 1,
+    name: 'Rava-fried Ladyfish',
+    course: 'starters',
+    service: 'both',
+    veg: false,
+    price: 420,
+    description: 'Whole kane, rubbed in red masala, crusted in semolina and fried crisp. Lime on the side.',
+    spice: 2,
+    chefsPick: true,
+  },
+  {
+    id: 2,
+    name: 'Mushroom Ghee Roast',
+    course: 'starters',
+    service: 'dinner',
+    veg: true,
+    price: 340,
+    description: 'Byadgi chilli, tamarind and a generous spoon of ghee. Served with soft neer dosa.',
+    spice: 3,
+  },
+  {
+    id: 3,
+    name: 'Banana-flower Vada',
+    course: 'starters',
+    service: 'lunch',
+    veg: true,
+    price: 260,
+    description: 'Crunchy lentil fritters with chopped banana flower, curry leaf and fresh coconut chutney.',
+    spice: 1,
+  },
+  {
+    id: 4,
+    name: 'Prawn Sukka',
+    course: 'starters',
+    service: 'dinner',
+    veg: false,
+    price: 460,
+    description: 'Tiger prawns tossed dry with roasted coconut and black pepper, piled on a neer dosa.',
+    spice: 2,
+  },
+  {
+    id: 5,
+    name: 'Goli Baje',
+    course: 'starters',
+    service: 'lunch',
+    veg: true,
+    price: 220,
+    description: 'Mangaluru bonda: fluffy fried dough with curry leaf and ginger, coconut chutney to dip.',
+    spice: 0,
+    tag: 'Kids love it',
+  },
+
+  // ---- Mains ----
+  {
+    id: 6,
+    name: 'Kingfish Curry & Red Rice',
+    course: 'mains',
+    service: 'both',
+    veg: false,
+    price: 620,
+    description: "Today's anjal in a sour, coconut-rich gravy with kokum. Boiled red rice and pickle.",
+    spice: 2,
+    chefsPick: true,
+  },
+  {
+    id: 7,
+    name: 'Kori Rotti',
+    course: 'mains',
+    service: 'dinner',
+    veg: false,
+    price: 580,
+    description: 'Country chicken gassi poured over crisp rice wafers at the table. Eat it fast.',
+    spice: 3,
+  },
+  {
+    id: 8,
+    name: 'Jackfruit & Cashew Roast',
+    course: 'mains',
+    service: 'both',
+    veg: true,
+    price: 520,
+    description: 'Tender raw jackfruit and whole cashews in our ghee-roast masala. With two neer dosas.',
+    spice: 2,
+  },
+  {
+    id: 9,
+    name: 'Coconut Stew & Appam',
+    course: 'mains',
+    service: 'lunch',
+    veg: true,
+    price: 480,
+    description: 'Gentle stew of vegetables in thin coconut milk, whole spices and green chilli.',
+    spice: 1,
+  },
+  {
+    id: 10,
+    name: 'Meen Oota (Fish Meal)',
+    course: 'mains',
+    service: 'lunch',
+    veg: false,
+    price: 390,
+    description: 'The coastal lunch: fried fish, fish curry, sambar, two vegetables and red rice on a leaf.',
+    spice: 2,
+    tag: 'Lunch only',
+  },
+
+  // ---- Desserts ----
+  {
+    id: 11,
+    name: 'Tender Coconut Payasam',
+    course: 'desserts',
+    service: 'both',
+    veg: true,
+    price: 240,
+    description: 'Served cold, with soft coconut flesh and a little cardamom.',
+    spice: 0,
+    chefsPick: true,
+  },
+  {
+    id: 12,
+    name: 'Banana Halwa Brûlée',
+    course: 'desserts',
+    service: 'both',
+    veg: true,
+    price: 280,
+    description: 'Slow-cooked Nendran banana halwa under a crackling burnt-jaggery top.',
+    spice: 0,
+    tag: 'Contains nuts',
+  },
+  {
+    id: 13,
+    name: 'Jaggery Kulfi',
+    course: 'desserts',
+    service: 'both',
+    veg: true,
+    price: 260,
+    description: 'Palm jaggery kulfi finished with a pinch of sea salt and toasted sesame.',
+    spice: 0,
+    tag: 'Sweet & salty',
+  },
+  {
+    id: 14,
+    name: 'Filter-coffee Panna Cotta',
+    course: 'desserts',
+    service: 'dinner',
+    veg: true,
+    price: 260,
+    description: "Set with agar, so it's fully vegetarian. Chikmagalur coffee and cardamom.",
+    spice: 0,
+    tag: 'Set with agar',
+  },
+]
+
+// Tabs above the menu grid
+export const courses = [
+  { id: 'starters', label: 'Starters' },
+  { id: 'mains', label: 'Mains' },
+  { id: 'desserts', label: 'Desserts' },
+]
+
+// Words shown next to the spice slider (index = slider value 0–3)
+export const spiceLabels = ['No heat', 'Mild', 'Medium', 'Fiery']
+
+// Fish in the scrolling ticker
+export const todaysCatch = [
+  'Kingfish (Anjal)',
+  'Pomfret',
+  'Tiger prawns',
+  'Ladyfish (Kane)',
+  'Mussels (Marvai)',
+  'Mackerel (Bangude)',
+]

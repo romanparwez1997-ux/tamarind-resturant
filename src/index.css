@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+/* ============================================================
+   DESIGN TOKENS
+   Every variable in @theme becomes Tailwind classes:
+   --color-chili -> bg-chili, text-chili, border-chili ...
+   ============================================================ */
+@theme {
+  /* Brand colours: the same in lunch and dinner */
+  --color-ink: #10302e;
+  --color-ink-soft: #3b5653;
+  --color-ink-deep: #0a2321;
+  --color-cream: #f7f0e3;
+  --color-paper: #fffaf1;
+  --color-tamarind: #6b3420;
+  --color-turmeric: #e9a23b;
+  --color-chili: #c8432b;
+  --color-chili-dark: #a53520;
+  --color-leaf: #2f7a4f;
+  --color-sea: #1f6f78;
+  --color-sea-dark: #185c64;
+  --color-line-light: rgb(255 250 241 / 0.16);
+
+  /* Theme colours: SWAPPED for dinner (see [data-service="dinner"] below).
+     Components use these (bg-page, bg-card, text-fg ...) so they
+     change colour automatically when the service changes. */
+  --color-page: #f7f0e3;
+  --color-band: #fffaf1;
+  --color-card: #fffaf1;
+  --color-fg: #10302e;
+  --color-fg-soft: #3b5653;
+  --color-line: rgb(16 48 46 / 0.16);
+
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* animate-ticker, animate-spin-slow, animate-rise, animate-pop */
+  --animate-ticker: ticker 32s linear infinite;
+  --animate-spin-slow: spin 22s linear infinite;
+  --animate-rise: rise 0.4s ease;
+  --animate-pop: pop 0.4s cubic-bezier(0.3, 1.6, 0.6, 1);
+
+  @keyframes ticker {
+    to { transform: translateX(-50%); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+  }
+  /* uses the `scale` property (not transform) so it doesn't fight
+     Tailwind's -translate-x-1/2, which uses the `translate` property */
+  @keyframes pop {
+    from { opacity: 0; scale: 0; }
+    to { opacity: 1; scale: 1; }
+  }
+}
+
+/* DINNER MODE: App puts data-service="dinner" on its wrapper div.
+   We only redefine the theme variables; every bg-page / text-fg / border-line
+   class underneath picks up the new values. React never touches colours. */
+[data-service="dinner"] {
+  --color-page: #0b2422;
+  --color-band: #0e2b29;
+  --color-card: #133431;
+  --color-fg: #f7f0e3;
+  --color-fg-soft: #b8c9c4;
+  --color-line: rgb(255 250 241 / 0.14);
+  /* lighter versions of two brand colours so they stay readable on dark */
+  --color-tamarind: #e0936a;
+  --color-sea: #6fc0c6;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px; /* sticky header height */
+  }
+  body {
+    @apply bg-page font-body text-fg antialiased;
+  }
+  :focus-visible {
+    @apply outline-3 outline-offset-3 outline-turmeric;
+  }
+}
+
+/* ============================================================
+   ILLUSTRATIONS: layered gradients, too long to read as
+   class names, so each one is a single custom utility class.
+   ============================================================ */
+@utility plate-art {
+  background: radial-gradient(circle, var(--color-paper) 62%, #ede1c9 63%, #ede1c9 66%, var(--color-paper) 67%);
+}
+@utility leaf-art {
+  background:
+    repeating-linear-gradient(45deg, transparent 0 14px, rgb(255 255 255 / 0.08) 14px 16px),
+    linear-gradient(135deg, #4c9a63, #1f5e3a);
+}
+@utility food-art {
+  background:
+    radial-gradient(circle at 70% 28%, var(--color-chili) 0 5%, transparent 5.5%),
+    radial-gradient(circle at 25% 72%, #8fc27a 0 6%, transparent 6.5%),
+    radial-gradient(circle at 33% 36%, #fffdf6 0 20%, #efe5d1 21% 23%, transparent 24%),
+    radial-gradient(circle at 62% 60%, #f4b54a 0 25%, #d9822a 26% 33%, transparent 34%);
+}
+@utility postcard-day {
+  background:
+    radial-gradient(circle at 70% 36%, #f6c35a 0 11%, transparent 11.5%),
+    linear-gradient(to bottom, #f6dcb4 0 52%, transparent 52%),
+    repeating-linear-gradient(to bottom, var(--color-sea) 0 14px, var(--color-sea-dark) 14px 28px);
+}
+@utility postcard-night {
+  background:
+    radial-gradient(circle at 70% 30%, #f1ecdc 0 8%, transparent 8.5%),
+    radial-gradient(circle at 20% 18%, #fff 0 0.6%, transparent 0.8%),
+    radial-gradient(circle at 42% 10%, #fff 0 0.5%, transparent 0.7%),
+    radial-gradient(circle at 88% 14%, #fff 0 0.6%, transparent 0.8%),
+    linear-gradient(to bottom, #13294a 0 52%, transparent 52%),
+    repeating-linear-gradient(to bottom, #0f3a4a 0 14px, #0b2e3b 14px 28px);
+}
+/* the floor plan: paper with faint tile lines */
+@utility floor-art {
+  background-color: #f4ead6;
+  background-image:
+    linear-gradient(rgb(16 48 46 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(16 48 46 / 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
