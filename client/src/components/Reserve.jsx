@@ -104,6 +104,8 @@ export default function Reserve({ service, thali, user, onSignIn }) {
     if (!window.confirm('Cancel this booking?')) return
     try {
       await cancelBooking(id)
+      // If the ticket is still showing this booking's "Booked" stamp, clear it
+      if (confirmed?.id === id) startOver()
     } catch (err) {
       window.alert(err.message)
     }
