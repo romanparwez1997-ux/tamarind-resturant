@@ -1,6 +1,7 @@
 import express from 'express'
 import { toNodeHandler } from 'better-auth/node'
 import { auth } from './auth.js'
+import { pool } from './db.js'
 import bookingsRouter from './routes/bookings.js'
 import dishesRouter from './routes/dishes.js'
 import tablesRouter from './routes/tables.js'
@@ -21,7 +22,28 @@ app.get('/', (req, res) => {
     routes: ['GET /api/health', 'GET /api/dishes', 'GET /api/tables', 'GET /api/bookings/taken', '/api/auth/*'],
   })
 })
-app.get('/api/health', (req, res) => res.json({ ok: true }))
+// Health check: is the database reachable, do the tables exist, are the
+// settings present? Shows only yes/no for secrets, never their values.
+app.get('/api/health', async (req, res) => {
+  const report = {
+    env: {
+      DATABASE_URL: Boolean(process.env.DATABASE_URL),
+      BETTER_AUTH_SECRET: Boolean(process.env.BETTER_AUTH_SECRET),
+      BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || null, // not secret: it's the public site address
+    },
+  }
+  try {
+    const { rows } = await pool.query(
+      `SELECT to_regclass('public.dishes') IS NOT NULL AS dishes, to_regclass('public."user"') IS NOT NULL AS users`,
+    )
+    report.database = 'connected'
+    report.tables = rows[0].dishes && rows[0].users ? 'ok' : 'missing: run npm run db:migrate and db:seed against this database'
+  } catch (err) {
+    report.database = `cannot connect (${err.code || 'error'})`
+  }
+  report.ok = report.database === 'connected' && report.tables === 'ok' && report.env.BETTER_AUTH_SECRET
+  res.status(report.ok ? 200 : 500).json(report)
+})
 app.use('/api/dishes', dishesRouter)
 app.use('/api/tables', tablesRouter)
 app.use('/api/bookings', bookingsRouter)
