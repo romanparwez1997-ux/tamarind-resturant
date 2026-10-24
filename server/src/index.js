@@ -38,6 +38,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong on the server.' })
 })
 
-// Railway (and most hosts) tell the app which port to use through PORT
+// Start listening. Locally that's port 3000. On Vercel, the platform sees
+// app.listen and runs the app as a Vercel Function instead.
 const port = process.env.PORT || 3000
 app.listen(port, () => console.log(`API listening on http://localhost:${port}`))

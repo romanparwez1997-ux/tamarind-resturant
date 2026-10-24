@@ -2,12 +2,13 @@
 
 Assignment 3: my React + Tailwind restaurant site now has a real backend behind it.
 
-- **Frontend:** Vite + React + Tailwind (`client/`), deployed on **Vercel**
-- **Backend:** Node.js + Express (`server/`), deployed on **Railway**
+- **Frontend:** Vite + React + Tailwind (`client/`)
+- **Backend:** Node.js + Express (`server/`)
+- **Hosting:** both on **Vercel**, as two *services* in one project (`vercel.json`)
 - **Database:** Postgres on **Neon**, queried with the `pg` library (plain SQL)
 - **Auth:** **Better Auth** with email + password and cookie sessions
 
-Live site: `https://YOUR-SITE.vercel.app` · API: `https://YOUR-APP.up.railway.app/api/dishes`
+Live site: `https://YOUR-SITE.vercel.app` · API: `https://YOUR-SITE.vercel.app/api/dishes`
 
 No TypeScript. Frontend details from Assignment 2 are in [docs/week2-frontend.md](docs/week2-frontend.md).
 
@@ -22,7 +23,7 @@ No TypeScript. Frontend details from Assignment 2 are in [docs/week2-frontend.md
 5. [How auth works](#5-how-auth-works)
 6. [API routes](#6-api-routes)
 7. [Running it locally](#7-running-it-locally)
-8. [Deploying (Neon → Railway → Vercel)](#8-deploying-neon--railway--vercel)
+8. [Deploying (Neon → Vercel)](#8-deploying-neon--vercel)
 9. [Likely assessment questions](#9-likely-assessment-questions)
 
 ---
@@ -42,7 +43,7 @@ No TypeScript. Frontend details from Assignment 2 are in [docs/week2-frontend.md
 | UI reflects signed-in state | Header shows **Sign in**, or **Hi, Asha · Sign out**; booking button says **Sign in to book** |
 | Sessions survive a refresh | Session token lives in an httpOnly cookie; `useSession()` re-checks it on load |
 | React uses the real API | `client/src/lib/api.js`; `App.jsx` fetches dishes, `Reserve.jsx` fetches tables and bookings |
-| Live on the internet | Vercel (frontend) + Railway (backend) + Neon (database) |
+| Live on the internet | Vercel (frontend + backend, one project) + Neon (database) |
 
 ---
 
@@ -51,12 +52,12 @@ No TypeScript. Frontend details from Assignment 2 are in [docs/week2-frontend.md
 ```
 tamarind-and-tide/
 ├─ .gitignore                 ignores node_modules, dist and every .env
+├─ vercel.json                deploys client/ and server/ together; /api/* → server, rest → client
 ├─ README.md                  this file
 ├─ docs/week2-frontend.md     the Assignment 2 write-up (components, state, Tailwind)
 │
-├─ client/                    THE FRONTEND (Vite + React + Tailwind) → Vercel
+├─ client/                    THE FRONTEND (Vite + React + Tailwind)
 │  ├─ vite.config.js          dev proxy: /api/* → http://localhost:3000
-│  ├─ vercel.json             live proxy: /api/* → the Railway server
 │  └─ src/
 │     ├─ App.jsx              fetches the menu, holds the session, opens the sign-in popup
 │     ├─ lib/
@@ -70,7 +71,7 @@ tamarind-and-tide/
 │     │  └─ …                 everything else is unchanged from Week 2
 │     └─ data/                only fixed text and labels are left here
 │
-└─ server/                    THE BACKEND (Node + Express) → Railway
+└─ server/                    THE BACKEND (Node + Express)
    ├─ .env.example            which secrets are needed (copy to .env)
    ├─ package.json            scripts: dev, start, db:migrate, db:seed
    ├─ db/
@@ -90,7 +91,7 @@ tamarind-and-tide/
          └─ bookings.js       taken tables, my bookings, create, cancel
 ```
 
-**Why `db/` and `src/` are separate in the server:** `src/` is the app that runs on Railway all the time.
+**Why `db/` and `src/` are separate in the server:** `src/` is the app that runs on Vercel.
 `db/` holds one-off scripts I run by hand to set up or refill the database.
 
 ---
@@ -101,7 +102,7 @@ tamarind-and-tide/
  Browser (https://my-site.vercel.app)
     │  fetch('/api/dishes')                      same site, so the cookie is sent
     ▼
- Vercel ── vercel.json rewrite ──► Railway: Express (server/src/index.js)
+ Vercel ── vercel.json: /api/* ──► "server" service: Express (server/src/index.js)
                                       │  app.use('/api/dishes', dishesRouter)
                                       ▼
                                    routes/dishes.js
@@ -113,12 +114,12 @@ tamarind-and-tide/
                                    res.json(rows)  ──►  back to the browser as JSON
 ```
 
-Locally it's the same, except Vite's dev server (`vite.config.js`) does the forwarding instead of Vercel.
+Every other path (`/`, `/assets/…`) goes to the `client` service, which serves the built React files.
+Locally it's the same, except Vite's dev server (`vite.config.js`) does the `/api` forwarding.
 
-**Why a proxy and not `fetch('https://my-app.up.railway.app/…')` directly?**
-Vercel and Railway are different websites. A login cookie set by Railway would be a *third-party* cookie
-on the Vercel site, and browsers (Safari especially) block those, so you'd be logged out on every refresh.
-With the rewrite, the browser only ever talks to the Vercel URL, the cookie is first-party, and I don't need CORS.
+**Why one domain for both?** The site and the API share an address, so the login cookie is a normal
+*first-party* cookie. If the API lived on a different website, its cookie would be *third-party*, and browsers
+(Safari especially) block those, so you'd be logged out on every refresh. It also means no CORS setup is needed.
 
 ---
 
@@ -249,13 +250,11 @@ Generate a secret with `openssl rand -base64 32`.
 
 ---
 
-## 8. Deploying (Neon → Railway → Vercel)
-
-The order matters: the server needs the database URL, Vercel needs the server URL, and the server needs the Vercel URL.
+## 8. Deploying (Neon → Vercel)
 
 ### Step 1: Neon (database)
-1. Sign up at neon.tech → **New project** (pick a region near you, e.g. Singapore or Frankfurt).
-2. **Connect** → copy the connection string. Change `sslmode=require` at the end to `sslmode=verify-full`.
+1. Sign up at neon.tech → **New project**.
+2. **Connect** → copy the connection string (the *pooled* one, with `-pooler` in the host). Change `sslmode=require` to `sslmode=verify-full`.
 3. Put it in `server/.env` as `DATABASE_URL`, then from `server/` run:
    ```bash
    npm run db:migrate && npm run db:seed
@@ -268,38 +267,29 @@ git status            # make sure no .env file is listed!
 git push
 ```
 
-### Step 3: Railway (backend)
-1. railway.com → **New Project** → **Deploy from GitHub repo** → pick this repo.
-2. Service **Settings** → **Root Directory**: `server`. Railway runs `npm install` and then `npm start`.
-3. **Variables** → add:
+### Step 3: Vercel
+1. vercel.com → **Add New… → Project** → import the repo. Leave **Root Directory** as the repo root:
+   the root `vercel.json` tells Vercel to build `client/` (Vite) and `server/` (Express) as two services.
+2. **Settings → Environment Variables** → add (for Production):
    - `DATABASE_URL`: the Neon string
    - `BETTER_AUTH_SECRET`: a new random string (`openssl rand -base64 32`)
-   - `BETTER_AUTH_URL`: put `http://localhost:5173` for now; you'll change it in step 5
-   (Railway sets `PORT` itself.)
-4. **Settings** → **Networking** → **Generate Domain**. Open `https://<that-domain>/api/dishes`: you should see the menu as JSON.
-
-### Step 4: Vercel (frontend)
-1. Edit `client/vercel.json`: replace `YOUR-RAILWAY-APP.up.railway.app` with the Railway domain. Commit and push.
-2. vercel.com → **Add New… → Project** → import the repo.
-3. **Root Directory**: `client`. The framework is detected as Vite. **Deploy**.
-
-### Step 5: Connect the two
-1. Copy the Vercel production URL, e.g. `https://tamarind-and-tide.vercel.app` (no slash at the end).
-2. In Railway → **Variables**, set `BETTER_AUTH_URL` to it. Railway redeploys by itself.
-3. Open the Vercel URL and check the menu loads, then sign up, refresh (still signed in), book a table and sign out.
+   - `BETTER_AUTH_URL`: the production URL, e.g. `https://tamarind-and-tide.vercel.app` (no `/` at the end)
+3. **Redeploy** (Deployments → ⋯ → Redeploy) so the server picks the variables up.
+4. Check `https://<your-site>/api/dishes` shows the menu as JSON, then open the site: sign up, refresh
+   (still signed in), book a table and sign out.
 
 **If something breaks:**
-- Menu says "Couldn't load": check `vercel.json` has the right Railway domain, and that `/api/dishes` works on Railway directly.
-- Login says "Invalid origin": `BETTER_AUTH_URL` on Railway doesn't exactly match the URL in the browser (`https`, no trailing `/`). Vercel *preview* URLs (with random letters) won't work; use the production one.
-- Anything else: open Railway → **Deployments** → **View logs**; server errors are printed there.
+- Menu says "Couldn't load": open `/api/dishes` directly; if that fails, the server can't reach the database (check `DATABASE_URL`).
+- Login says "Invalid origin": `BETTER_AUTH_URL` doesn't exactly match the URL in the browser (`https`, no trailing `/`). Vercel *preview* URLs (with random letters) won't work; use the production one.
+- Anything else: Vercel → your project → **Logs**; server errors are printed there.
 
 ---
 
 ## 9. Likely assessment questions
 
 **Walk me through your folder structure.**
-Two apps in one repo. `client/` is the React site from Week 2, deployed to Vercel. `server/` is an Express API deployed
-to Railway. Inside the server, `src/index.js` builds the app and plugs in `auth.js` and the three route files;
+Two apps in one repo. `client/` is the React site from Week 2, deployed to Vercel. `server/` is an Express API. Both deploy to
+one Vercel project as two services (root `vercel.json`). Inside the server, `src/index.js` builds the app and plugs in `auth.js` and the three route files;
 `db.js` is the database connection; `db/` holds the schema and seed scripts I run by hand.
 
 **How is your database connected?**
@@ -307,7 +297,7 @@ to Railway. Inside the server, `src/index.js` builds the app and plugs in `auth.
 `pool.query(sql, values)`. Better Auth is given the same pool, so it uses the same Neon database.
 
 **Where are your secrets, and how do you know they're not on GitHub?**
-In `server/.env` locally and in Railway's Variables when live. The root `.gitignore` has `.env` and `.env.*`.
+In `server/.env` locally and in Vercel's Environment Variables when live. The root `.gitignore` has `.env` and `.env.*`.
 `git check-ignore -v server/.env` shows the rule that ignores it, and `git log --all -- server/.env` shows it was never committed.
 
 **What does the seed script do?**
