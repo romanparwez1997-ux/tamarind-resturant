@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { btn, btnSmall } from '../classes'
+import { authClient } from '../lib/authClient'
 import ServiceToggle from './ServiceToggle'
 import { Container } from './ui'
 
@@ -9,10 +10,25 @@ const links = [
   { href: '#thali', label: 'Your thali' },
 ]
 
-export default function Header({ service, onServiceChange }) {
+export default function Header({ service, onServiceChange, user, sessionLoading, onSignIn }) {
   // Mobile menu open / closed. Only the header cares, so it lives here.
   const [menuOpen, setMenuOpen] = useState(false)
   const close = () => setMenuOpen(false)
+
+  function signIn() {
+    close()
+    onSignIn()
+  }
+
+  async function signOut() {
+    close()
+    // Deletes the session on the server and clears the cookie.
+    // useSession() in App then gives null and everything re-renders signed out.
+    await authClient.signOut()
+  }
+
+  const authLink =
+    'block cursor-pointer py-2.5 font-medium decoration-chili decoration-2 underline-offset-8 hover:underline md:py-1'
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-page/90 backdrop-blur">
@@ -21,7 +37,7 @@ export default function Header({ service, onServiceChange }) {
           <span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-ink text-xs tracking-wide text-turmeric">
             T&amp;T
           </span>
-          <span className="hidden min-[400px]:inline">Tamarind &amp; Tide</span>
+          <span className="hidden min-[400px]:inline md:hidden lg:inline">Tamarind &amp; Tide</span>
         </a>
 
         {/* Mobile: full-width row under the bar (order-last), hidden until open.
@@ -48,6 +64,25 @@ export default function Header({ service, onServiceChange }) {
                 Book a table
               </a>
             </li>
+
+            {/* Signed-in state. Nothing is shown until the session check
+                finishes, so "Sign in" never flashes up for a signed-in user. */}
+            {!sessionLoading && (
+              <li className="mt-3 border-t border-line pt-2 md:mt-0 md:border-0 md:pt-0">
+                {user ? (
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-fg-soft md:hidden lg:inline">Hi, {user.name.split(' ')[0]}</span>
+                    <button type="button" onClick={signOut} className={authLink}>
+                      Sign out
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={signIn} className={authLink}>
+                    Sign in
+                  </button>
+                )}
+              </li>
+            )}
           </ul>
         </nav>
 

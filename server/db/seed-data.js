@@ -1,4 +1,5 @@
-
+// The Week 2 hardcoded data, moved here so it can be loaded into the database.
+// The React app no longer imports these; it fetches them from the API.
 
 export const dishes = [
   // ---- Starters ----
@@ -156,22 +157,16 @@ export const dishes = [
   },
 ]
 
-// Tabs above the menu grid
-export const courses = [
-  { id: 'starters', label: 'Starters' },
-  { id: 'mains', label: 'Mains' },
-  { id: 'desserts', label: 'Desserts' },
-]
-
-// Words shown next to the spice slider (index = slider value 0–3)
-export const spiceLabels = ['No heat', 'Mild', 'Medium', 'Fiery']
-
-// Fish in the scrolling ticker
-export const todaysCatch = [
-  'Kingfish (Anjal)',
-  'Pomfret',
-  'Tiger prawns',
-  'Ladyfish (Kane)',
-  'Mussels (Marvai)',
-  'Mackerel (Bangude)',
+// The dining room. 9 tables, 32 seats.
+// x / y = centre of the table, as a % of the floor plan's width / height.
+export const tables = [
+  { id: 'T1', seats: 2, zone: 'Window', x: 12, y: 20 },
+  { id: 'T2', seats: 2, zone: 'Window', x: 32, y: 20 },
+  { id: 'T3', seats: 4, zone: 'Window', x: 56, y: 20 },
+  { id: 'T4', seats: 4, zone: 'Window', x: 82, y: 20 },
+  { id: 'T5', seats: 6, zone: 'Courtyard', x: 20, y: 50 },
+  { id: 'T6', seats: 6, zone: 'Courtyard', x: 52, y: 50 },
+  { id: 'T7', seats: 4, zone: 'Courtyard', x: 84, y: 50 },
+  { id: 'T8', seats: 2, zone: 'Counter', x: 16, y: 80 },
+  { id: 'T9', seats: 2, zone: 'Counter', x: 36, y: 80 },
 ]

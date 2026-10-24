@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets: never commit these (the .example file is safe and IS committed)
+.env
+.env.*
+!.env.example

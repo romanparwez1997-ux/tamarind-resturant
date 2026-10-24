@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { courses, dishes } from '../data/menu'
+import { courses } from '../data/menu'
 import { services } from '../data/site'
 import { isServed, rupees } from '../utils'
 import DishCard from './DishCard'
@@ -7,7 +7,8 @@ import MenuFilters from './MenuFilters'
 import Thali from './Thali'
 import { Container, Eyebrow, Wave } from './ui'
 
-export default function Menu({ service, quantities, onQuantityChange, thali, onClearThali }) {
+// `dishes` comes from the API (fetched in App). menuStatus: 'loading' | 'ready' | 'error'
+export default function Menu({ service, dishes, menuStatus, quantities, onQuantityChange, thali, onClearThali }) {
   // --- state: only the user's filter choices ---
   const [course, setCourse] = useState('starters')
   const [vegOnly, setVegOnly] = useState(false)
@@ -63,8 +64,11 @@ export default function Menu({ service, quantities, onQuantityChange, thali, onC
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px] lg:items-start">
           <div>
             <p className="mb-5 text-sm text-fg-soft" aria-live="polite">
-              {visibleDishes.length} {vegOnly ? 'vegetarian ' : ''}
-              {courseName}
+              {menuStatus === 'loading' && 'Loading the menu…'}
+              {menuStatus === 'error' && (
+                <span className="font-bold text-chili">Couldn't load the menu. Please refresh the page.</span>
+              )}
+              {menuStatus === 'ready' && `${visibleDishes.length} ${vegOnly ? 'vegetarian ' : ''}${courseName}`}
             </p>
 
             <ul className="grid gap-6 sm:grid-cols-2">
@@ -78,7 +82,7 @@ export default function Menu({ service, quantities, onQuantityChange, thali, onC
               ))}
             </ul>
 
-            {visibleDishes.length === 0 && (
+            {menuStatus === 'ready' && visibleDishes.length === 0 && (
               <div className="rounded-[20px] border border-dashed border-line p-6 text-fg-soft">
                 <p className="mb-3">No {courseName} match those filters right now.</p>
                 <button type="button" onClick={resetFilters} className="cursor-pointer font-bold text-chili underline underline-offset-4">

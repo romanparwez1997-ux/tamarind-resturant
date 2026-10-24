@@ -1,30 +1,29 @@
-# Tamarind & Tide (React + Tailwind)
+# Tamarind & Tide: full stack
 
-Assignment 2: my Assignment 1 restaurant site, rebuilt with **Vite + React + Tailwind CSS v4**.
-It's the same business, content, colours and fonts, with new layouts and four new interactive features.
+Assignment 3: my React + Tailwind restaurant site now has a real backend behind it.
 
-```bash
-npm install
-npm run dev      # open http://localhost:5173
-npm run build    # production build into dist/
-```
+- **Frontend:** Vite + React + Tailwind (`client/`), deployed on **Vercel**
+- **Backend:** Node.js + Express (`server/`), deployed on **Railway**
+- **Database:** Postgres on **Neon**, queried with the `pg` library (plain SQL)
+- **Auth:** **Better Auth** with email + password and cookie sessions
 
-No TypeScript, no extra libraries (only `react`, `react-dom`, `tailwindcss`, `@tailwindcss/vite`), and all data is hardcoded.
+Live site: `https://YOUR-SITE.vercel.app` · API: `https://YOUR-APP.up.railway.app/api/dishes`
+
+No TypeScript. Frontend details from Assignment 2 are in [docs/week2-frontend.md](docs/week2-frontend.md).
 
 ---
 
 ## Contents
 
 1. [Assignment checklist](#1-assignment-checklist)
-2. [The four new features](#2-the-four-new-features)
-3. [How the app starts](#3-how-the-app-starts)
-4. [Where state lives (the big picture)](#4-where-state-lives-the-big-picture)
-5. [File-by-file explanation](#5-file-by-file-explanation)
-6. [How useState works here](#6-how-usestate-works-here)
-7. [How the controlled components work](#7-how-the-controlled-components-work)
-8. [Tailwind patterns used](#8-tailwind-patterns-used)
+2. [Folder structure](#2-folder-structure)
+3. [How a request travels](#3-how-a-request-travels)
+4. [The database schema in plain English](#4-the-database-schema-in-plain-english)
+5. [How auth works](#5-how-auth-works)
+6. [API routes](#6-api-routes)
+7. [Running it locally](#7-running-it-locally)
+8. [Deploying (Neon → Railway → Vercel)](#8-deploying-neon--railway--vercel)
 9. [Likely assessment questions](#9-likely-assessment-questions)
-10. [Commit plan](#10-commit-plan)
 
 ---
 
@@ -32,590 +31,311 @@ No TypeScript, no extra libraries (only `react`, `react-dom`, `tailwindcss`, `@t
 
 | Requirement | Where |
 |---|---|
-| Vite + React inside the existing repo | `package.json`, `vite.config.js`, `index.html`, `src/main.jsx` |
-| Header, hero, main content and footer as their own components | `Header.jsx`, `Hero.jsx`, `Menu.jsx` (main content), `Footer.jsx`, plus `About`, `Reserve` and smaller parts |
-| Listed items in one data file, as an array of objects | `src/data/menu.js` holds the `dishes` array. Cards are made with `.map()`, never copy-pasted JSX |
-| Tailwind fully wired in, old styles.css removed | `@tailwindcss/vite` in `vite.config.js`; `src/index.css` contains only Tailwind setup and design tokens |
-| One real filter on the main grid, built with useState | `Menu.jsx` has course tabs, a veg-only switch and a spice slider, all `useState` |
-| One small controlled component reused per item | `PortionStepper.jsx` appears on every dish card, and is reused again for the guest count |
-| Mobile-first responsive classes | Unprefixed classes are for phones; `sm:` / `md:` / `lg:` add the bigger layouts |
-| No horizontal scroll | Tested at 320, 375, 768, 1024 and 1440px, in both lunch and dinner mode |
+| Split into client and server | `client/` (React) and `server/` (Express), each with its own `package.json` |
+| Free Postgres database + schema | Neon. All tables are in `server/db/schema.sql`, created by `npm run db:migrate` |
+| Users table handled by the auth library | `user`, `session`, `account`, `verification` in `schema.sql`, used by Better Auth |
+| Product/items table | `dishes` (the menu), plus `dining_tables`, `bookings`, `booking_items` |
+| Secrets in `.env`, never committed | `server/.env` (git-ignored by the root `.gitignore`); `server/.env.example` shows the names only |
+| Week 2 hardcoded data moved into the DB with a seed script | Arrays moved to `server/db/seed-data.js`; `npm run db:seed` runs `server/db/seed.js` |
+| At least one API route returning JSON | `GET /api/dishes` (and 6 more, see [§6](#6-api-routes)) |
+| Real signup / login / sessions | Better Auth (`server/src/auth.js`), popup in `client/src/components/AuthDialog.jsx` |
+| UI reflects signed-in state | Header shows **Sign in**, or **Hi, Asha · Sign out**; booking button says **Sign in to book** |
+| Sessions survive a refresh | Session token lives in an httpOnly cookie; `useSession()` re-checks it on load |
+| React uses the real API | `client/src/lib/api.js`; `App.jsx` fetches dishes, `Reserve.jsx` fetches tables and bookings |
+| Live on the internet | Vercel (frontend) + Railway (backend) + Neon (database) |
 
 ---
 
-## 2. The four new features
+## 2. Folder structure
 
-| Feature | What it does | Main files |
-|---|---|---|
-| **☀ / ☾ Lunch–dinner service** | A switch in the header changes the whole site: colours (light ↔ dark), the menu (some dishes are lunch-only or dinner-only), hero text, the sun or moon, the night-time postcard, the highlighted step in "A day at", and the booking seatings. On first load it picks lunch before 4 pm and dinner after. | `App.jsx`, `ServiceToggle.jsx`, `index.css` |
-| **🌶 Spice filter** | A 0–3 slider ("No heat" → "Fiery") hides dishes hotter than the chosen level. It works together with the course tabs and the veg switch, and each tab shows a live count. | `Menu.jsx`, `MenuFilters.jsx` |
-| **🍃 Build-your-thali** | The + / − stepper on each dish adds plates to a banana leaf. Each dish becomes a steel bowl, the bowls space themselves evenly round the leaf, and a running bill appears underneath. On phones, a sticky bar shows the total while you scroll. | `Thali.jsx`, `DishCard.jsx`, `utils.js` |
-| **🪑 Seat-map booking** | A drawn floor plan of all 9 tables (32 seats). You pick your own table. Tables that are taken at that seating, or too small for your party, are disabled. The ticket stub shows your table and your pre-ordered thali. | `SeatMap.jsx`, `Reserve.jsx`, `data/tables.js` |
+```
+tamarind-and-tide/
+├─ .gitignore                 ignores node_modules, dist and every .env
+├─ README.md                  this file
+├─ docs/week2-frontend.md     the Assignment 2 write-up (components, state, Tailwind)
+│
+├─ client/                    THE FRONTEND (Vite + React + Tailwind) → Vercel
+│  ├─ vite.config.js          dev proxy: /api/* → http://localhost:3000
+│  ├─ vercel.json             live proxy: /api/* → the Railway server
+│  └─ src/
+│     ├─ App.jsx              fetches the menu, holds the session, opens the sign-in popup
+│     ├─ lib/
+│     │  ├─ api.js            one function per API route (getDishes, createBooking …)
+│     │  └─ authClient.js     Better Auth's React client (useSession, signIn, signUp, signOut)
+│     ├─ components/
+│     │  ├─ AuthDialog.jsx    NEW: sign-in / create-account popup
+│     │  ├─ Header.jsx        now shows Sign in / Sign out
+│     │  ├─ Menu.jsx          now gets dishes as a prop (plus loading / error text)
+│     │  ├─ Reserve.jsx       now loads tables + taken tables, saves bookings, lists "your bookings"
+│     │  └─ …                 everything else is unchanged from Week 2
+│     └─ data/                only fixed text and labels are left here
+│
+└─ server/                    THE BACKEND (Node + Express) → Railway
+   ├─ .env.example            which secrets are needed (copy to .env)
+   ├─ package.json            scripts: dev, start, db:migrate, db:seed
+   ├─ db/
+   │  ├─ schema.sql           every table: CREATE TABLE IF NOT EXISTS …
+   │  ├─ migrate.js           runs schema.sql against the database
+   │  ├─ seed-data.js         the Week 2 dishes + tables arrays
+   │  └─ seed.js              inserts seed-data.js into the database
+   └─ src/
+      ├─ index.js             creates the Express app, mounts auth + routes, listens on PORT
+      ├─ db.js                the Postgres connection pool
+      ├─ auth.js              Better Auth setup
+      ├─ middleware/
+      │  └─ requireAuth.js    blocks a route unless there's a valid session
+      └─ routes/
+         ├─ dishes.js         GET /api/dishes
+         ├─ tables.js         GET /api/tables
+         └─ bookings.js       taken tables, my bookings, create, cancel
+```
+
+**Why `db/` and `src/` are separate in the server:** `src/` is the app that runs on Railway all the time.
+`db/` holds one-off scripts I run by hand to set up or refill the database.
 
 ---
 
-## 3. How the app starts
+## 3. How a request travels
 
 ```
-index.html  →  src/main.jsx  →  src/App.jsx  →  src/components/*
+ Browser (https://my-site.vercel.app)
+    │  fetch('/api/dishes')                      same site, so the cookie is sent
+    ▼
+ Vercel ── vercel.json rewrite ──► Railway: Express (server/src/index.js)
+                                      │  app.use('/api/dishes', dishesRouter)
+                                      ▼
+                                   routes/dishes.js
+                                      │  pool.query('SELECT … FROM dishes')
+                                      ▼
+                                   Neon Postgres
+                                      │  rows
+                                      ▼
+                                   res.json(rows)  ──►  back to the browser as JSON
 ```
 
-- **`index.html`** loads the Google Fonts and has one empty `<div id="root">`. React draws everything inside that div.
-- **`src/main.jsx`** imports `index.css` (Tailwind) and renders `<App />` into `#root`. `StrictMode` only adds extra development warnings.
-- **`vite.config.js`** turns on two plugins: `react()` so Vite understands JSX, and `tailwindcss()` so Tailwind scans the code and generates only the classes that are actually used.
+Locally it's the same, except Vite's dev server (`vite.config.js`) does the forwarding instead of Vercel.
 
-### Folder map
-
-```
-src/
-├─ main.jsx              start-up: renders <App/>
-├─ App.jsx               page layout + the two shared states
-├─ index.css             Tailwind, colour tokens, lunch/dinner themes, illustrations
-├─ utils.js              rupees(), isServed(), getThali()
-├─ classes.js            reusable button/label class strings
-├─ data/
-│  ├─ menu.js            dishes[], courses[], spiceLabels[], todaysCatch[]
-│  ├─ site.js            lunch/dinner text, stats, timeline, perks, hours
-│  └─ tables.js          floor plan tables, seatings, booked tables
-└─ components/
-   ├─ Header.jsx         logo, nav, mobile menu, service switch
-   ├─ ServiceToggle.jsx  ☀ Lunch / ☾ Dinner switch (controlled)
-   ├─ Hero.jsx           headline, plate art, "now serving" pill
-   ├─ Ticker.jsx         scrolling "today's catch" strip
-   ├─ About.jsx          story, postcard, quote, "A day at" timeline
-   ├─ Menu.jsx           filter state + dish grid + thali   ← main content
-   ├─ MenuFilters.jsx    tabs, veg switch, spice slider (controlled)
-   ├─ DishCard.jsx       one dish
-   ├─ PortionStepper.jsx − 0 + stepper (controlled, reused)
-   ├─ Thali.jsx          banana leaf with bowls + bill
-   ├─ Reserve.jsx        booking state + ticket form
-   ├─ SeatMap.jsx        floor plan (controlled)
-   ├─ Footer.jsx         hours, address, contact
-   └─ ui.jsx             Container, Eyebrow, DietMark, SpiceMeter, Wave
-```
+**Why a proxy and not `fetch('https://my-app.up.railway.app/…')` directly?**
+Vercel and Railway are different websites. A login cookie set by Railway would be a *third-party* cookie
+on the Vercel site, and browsers (Safari especially) block those, so you'd be logged out on every refresh.
+With the rewrite, the browser only ever talks to the Vercel URL, the cookie is first-party, and I don't need CORS.
 
 ---
 
-## 4. Where state lives (the big picture)
+## 4. The database schema in plain English
 
-React rule: **put state in the lowest component that every user of it sits under.**
+All of it is in [`server/db/schema.sql`](server/db/schema.sql).
 
 ```
-App ─────────────── service ('lunch' | 'dinner'), quantities ({ dishId: plates })
- │                  thali = getThali(quantities, service)   ← derived, not state
- ├─ Header ──────── menuOpen
- │   └─ ServiceToggle       (controlled by App's service)
- ├─ Hero / About            (just read service)
- ├─ Menu ────────── course, vegOnly, maxSpice
- │   ├─ MenuFilters         (controlled by Menu's filter state)
- │   ├─ DishCard
- │   │   └─ PortionStepper  (controlled by App's quantities)
- │   └─ Thali               (displays App's thali)
- └─ Reserve ─────── guests, seating, tableId, submitted
-     ├─ PortionStepper      (reused: controlled by Reserve's guests)
-     └─ SeatMap             (controlled by Reserve's tableId)
+ user ──< session            one user can be logged in on many browsers
+  │  └──< account            one user has a login method (email + hashed password)
+  │
+  └──< bookings >── dining_tables     a booking is made by one user, for one table
+           │
+           └──< booking_items >── dishes     a booking can pre-order many dishes
 ```
+(`──<` means "one to many".)
 
-Why each piece of state is where it is:
+**Auth tables (Better Auth fills these in, I don't write to them):**
 
-- **`service`** is in `App` because Header, Hero, About, Menu and Reserve all need it.
-- **`quantities`** is in `App`, not `Menu`, because `Reserve` also shows the pre-ordered thali on the ticket. Moving state up to a shared parent is called **lifting state up**.
-- **`menuOpen`** is in `Header` because nothing else cares about it.
-- **The filters** are in `Menu` because only the menu uses them.
-- **The booking choices** are in `Reserve` because only the booking uses them.
+- **`user`**: one row per person who signed up: id, name, email (unique).
+- **`session`**: one row per signed-in browser. `token` is what's stored in the cookie; `expiresAt` is 7 days later. Signing out deletes the row.
+- **`account`**: how the user logs in. For email login, `password` holds a **hash**, never the real password.
+- **`verification`**: short-lived codes (e.g. password reset). Required by Better Auth even if unused.
+
+**My tables:**
+
+- **`dishes`**: the menu. Each row is one dish with its price (whole rupees), course, lunch/dinner/both, veg, spice 0–3, and an optional tag. `CHECK` rules stop bad data, e.g. spice must be 0–3.
+- **`dining_tables`**: the 9 tables in the room: how many seats, which zone, and where to draw it on the floor plan (`x`, `y` in %).
+- **`bookings`**: a reservation. It links to the **user** who made it and the **table** booked, plus date, seating, guests and contact details. `UNIQUE (table_id, booking_date, seating)` means the database itself refuses a double booking.
+- **`booking_items`**: the thali pre-ordered with a booking: one row per dish with how many plates. It's a *join table* between bookings and dishes.
+
+**Foreign keys** (`REFERENCES`) make sure a booking can't point at a user or table that doesn't exist.
+`ON DELETE CASCADE` means deleting a booking also deletes its items, and deleting a user deletes their sessions and bookings.
 
 ---
 
-## 5. File-by-file explanation
+## 5. How auth works
 
-### `src/index.css`
+I use **Better Auth**. It handles password hashing, sessions and cookies, so I don't write that security code myself.
 
-```css
-@import "tailwindcss";
-```
-This one line switches Tailwind on and replaces the old `styles.css`.
-
-```css
-@theme {
-  --color-chili: #c8432b;        /* → bg-chili, text-chili, border-chili … */
-  --color-page:  #f7f0e3;        /* → bg-page  (theme colour, swapped for dinner) */
-  --font-display: "Fraunces", …; /* → font-display */
-  --animate-pop: pop 0.4s …;     /* → animate-pop */
-}
-```
-`@theme` registers my design tokens. Tailwind turns each variable into classes automatically. There are two kinds:
-
-- **Brand colours** such as `ink`, `chili`, `turmeric` and `leaf` mostly stay the same in both modes.
-- **Theme colours** (`page`, `band`, `card`, `fg`, `fg-soft`, `line`) are what components use for backgrounds, text and borders, so they can change for dinner.
-
-**How dinner mode works, in CSS only:**
-```css
-[data-service="dinner"] {
-  --color-page: #0b2422;
-  --color-fg:   #f7f0e3;
-  …
-}
-```
-`App` puts `data-service="dinner"` on its outer `<div>`. That rule redefines the variables, and every `bg-page`, `text-fg` and `border-line` inside the div picks up the new values. React never handles colours. It only changes one attribute. Two brand colours (`tamarind`, `sea`) get lighter versions too, so they stay readable on the dark background.
-
-`@keyframes` defines the ticker slide, the card fade-in (`rise`) and the bowl `pop`. `pop` animates the `scale` property rather than `transform`. Tailwind v4's `-translate-x-1/2` uses the separate `translate` property, so the two don't overwrite each other.
-
-`@layer base` sets the page-wide defaults: smooth scrolling, `scroll-padding-top` so the sticky header doesn't cover headings, and the visible focus ring.
-
-`@utility plate-art`, `postcard-day`, `floor-art` and the others are the gradient illustrations carried over from Assignment 1. They're too long to write as class names, so each one is a single custom class.
-
-### `src/data/menu.js`
-
+**Server: `server/src/auth.js`**
 ```js
-{ id: 6, name: 'Kingfish Curry & Red Rice', course: 'mains', service: 'both',
-  veg: false, price: 620, description: '…', spice: 2, chefsPick: true }
-```
-Each dish is one object with the same fields:
-
-- `id` is unique. It's used for React's `key` and as the key in `quantities`.
-- `course` decides which tab the dish appears under.
-- `service` is `'lunch'`, `'dinner'` or `'both'` and decides which menu it's on.
-- `veg` and `spice` are what the filters check.
-- `chefsPick` and `tag` are optional. The card only shows them if they exist.
-
-Adding a dish means adding one object; no JSX changes. In Week 3 this array will come from the backend instead.
-
-`courses` holds the tabs, `spiceLabels[n]` is the word shown for slider value `n`, and `todaysCatch` feeds the ticker.
-
-### `src/data/site.js`
-
-```js
-export const services = {
-  lunch:  { label: 'Lunch',  hours: '12 – 3 pm', lede: '…', badge: '…', … },
-  dinner: { label: 'Dinner', hours: '7 – 11 pm', lede: '…', badge: '…', … },
-}
-```
-This holds all the text that differs between lunch and dinner. Components look it up with `services[service]`, so there's no `if` statement anywhere for text. The file also holds `stats`, `dayTimeline` (where `service: 'lunch'` marks the step that gets highlighted), `perks` and `hours`.
-
-### `src/data/tables.js`
-
-```js
-{ id: 'T5', seats: 6, zone: 'Courtyard', x: 20, y: 50 }
-```
-- `x` and `y` are the centre of the table as a **percentage** of the floor plan, so the plan scales to any screen width.
-- `tableWidth` sets how wide each table is drawn, based on its seat count.
-- `seatings` lists the times for each service. `full: true` means that time can't be picked.
-- `bookedTables['7:00 pm']` lists the tables already taken at that seating.
-
-### `src/utils.js`
-
-```js
-export const rupees = (n) => `₹${n.toLocaleString('en-IN')}`
-```
-This turns `1660` into `₹1,660`. `'en-IN'` gives Indian grouping (₹1,00,000).
-
-```js
-export const isServed = (dish, service) => dish.service === 'both' || dish.service === service
-```
-This checks whether a dish is on the current menu.
-
-```js
-export function getThali(quantities, service) {
-  const items = dishes
-    .filter((dish) => isServed(dish, service) && quantities[dish.id] > 0)
-    .map((dish) => ({ dish, qty: quantities[dish.id] }))
-  const plates = items.reduce((sum, item) => sum + item.qty, 0)
-  const total  = items.reduce((sum, item) => sum + item.qty * item.dish.price, 0)
-  return { items, plates, total }
-}
-```
-This turns `{ 10: 2, 6: 1 }` into a list the Thali can draw, plus the totals:
-
-- `.filter` keeps the dishes that are picked *and* served right now.
-- `.map` pairs each dish with its quantity.
-- `.reduce` adds up plates and money, starting from `0`.
-
-Because it filters by service, switching to dinner hides lunch-only bowls. The quantities are still stored, though, so switching back to lunch brings them back.
-
-### `src/classes.js`
-
-Shared Tailwind class strings (`btn`, `btnGhost`, `btnSmall`, `fieldLabel`). Every button uses `className={btn}`, so they all look the same and can be changed in one place.
-
-### `src/App.jsx`
-
-```js
-const [service, setService] = useState(() => (new Date().getHours() < 16 ? 'lunch' : 'dinner'))
-```
-Passing a **function** to `useState` (a lazy initial value) means it runs once, on the first render, to pick the starting mode. After that, only `setService` changes it.
-
-```js
-const [quantities, setQuantities] = useState({})
-
-function updateQuantity(dishId, newQty) {
-  setQuantities((prev) => ({ ...prev, [dishId]: newQty }))
-}
-```
-- `prev` is the current object.
-- `...prev` copies all of its keys into a new object.
-- `[dishId]: newQty` overwrites one key. The square brackets mean "use the value of `dishId` as the key name".
-
-A **new** object is always created, because React only re-renders when it gets a new value. Writing `quantities[6] = 2` would change the old object, and React wouldn't notice.
-
-```js
-const thali = getThali(quantities, service)
-```
-This is **derived data**: it's recalculated on every render, never stored. Storing it as well would create a second copy that could fall out of sync.
-
-```jsx
-<div data-service={service} className="min-h-screen bg-page text-fg transition-colors duration-500">
-```
-This one attribute drives the whole colour theme.
-
-### `src/components/Header.jsx`
-
-```js
-const [menuOpen, setMenuOpen] = useState(false)
-<button onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen}>
-```
-The hamburger flips `menuOpen`, and its three bars rotate into an X with conditional classes.
-
-The nav's classes are:
-```
-${menuOpen ? 'block' : 'hidden'} order-last basis-full md:order-none md:ml-auto md:block md:basis-auto
-```
-- **On phones** it's hidden unless the menu is open, and `order-last basis-full` drops it onto its own full-width row under the bar.
-- **From `md:`** it's always visible and sits inline in the bar.
-
-The header also renders `<ServiceToggle value={service} onChange={onServiceChange} />`, passing App's state straight through.
-
-### `src/components/ServiceToggle.jsx`
-
-This is a controlled switch. It reads `value` and calls `onChange('lunch' | 'dinner')`. The knob slides with `translate-x-full` when `isDinner` is true. `role="switch"` and `aria-checked` tell screen readers what it is and whether it's on.
-
-### `src/components/Hero.jsx`
-
-```js
-const info = services[service]
-```
-Every piece of text that changes with the service comes from `info`: the pill, the intro paragraph, the badge and the ticker label.
-
-- The "now serving" dot uses Tailwind's built-in `animate-ping`.
-- "Tide" is outlined: `text-transparent [-webkit-text-stroke:2px_var(--color-fg)]`.
-- The sun (lunch) or moon (dinner) is a circle whose classes switch with a ternary.
-- The plate is three layered divs using the gradient utilities. The badge is an SVG with text wrapped round a circle.
-
-### `src/components/Ticker.jsx`
-
-The fish list is rendered **twice** and the strip slides left by 50%. When it has moved exactly one copy's width, the second copy sits where the first began, so the loop looks seamless. The duplicate has `aria-hidden` so screen readers skip it.
-
-`min-w-0 overflow-hidden` stops the long strip from widening the page. `group` together with `group-hover:[animation-play-state:paused]` pauses it while you hover.
-
-### `src/components/About.jsx`
-
-- The postcard switches between the `postcard-day` and `postcard-night` gradients. The boat and the sail are its `before:` and `after:` shapes, cut out with `clip-path`.
-- The quote sits under the postcard on phones. On `lg:` it becomes `absolute` and overlaps the postcard's corner.
-- The timeline maps `dayTimeline`. `const isNow = step.service === service` highlights the 12 pm step at lunch and the 7 pm step at dinner. It's a vertical list on phones and five columns from `md:`.
-- `<Wave className="text-page" />` draws a wavy edge in the next section's colour.
-
-### `src/components/Menu.jsx` ⭐ main content
-
-```js
-const [course, setCourse]     = useState('starters')
-const [vegOnly, setVegOnly]   = useState(false)
-const [maxSpice, setMaxSpice] = useState(3)
-```
-These three states hold only the user's choices.
-
-```js
-const matches = (dish) =>
-  isServed(dish, service) && (!vegOnly || dish.veg) && dish.spice <= maxSpice
-
-const visibleDishes = dishes.filter((dish) => dish.course === course && matches(dish))
-```
-`matches` checks every filter except the course:
-
-- `!vegOnly || dish.veg`: if veg-only is off, every dish passes; if it's on, only veg dishes pass.
-- `dish.spice <= maxSpice`: slider at 1 means only dishes with spice 0 or 1.
-
-`visibleDishes` then adds the course check. Both values are derived, never stored.
-
-```js
-const counts = {}
-courses.forEach((c) => {
-  counts[c.id] = dishes.filter((dish) => dish.course === c.id && matches(dish)).length
+export const auth = betterAuth({
+  database: pool,                          // same Postgres pool as my routes
+  secret: process.env.BETTER_AUTH_SECRET,  // signs the cookie
+  baseURL: process.env.BETTER_AUTH_URL,    // the site's public address
+  trustedOrigins: [process.env.BETTER_AUTH_URL],
+  emailAndPassword: { enabled: true, minPasswordLength: 8 },
 })
 ```
-This counts how many dishes each tab *would* show with the current filters. Those are the small numbers on the tabs.
+`index.js` hands every `/api/auth/*` request to Better Auth: `app.all('/api/auth/*splat', toNodeHandler(auth))`.
+It's mounted **before** `express.json()` because Better Auth reads the request body itself.
 
-```jsx
-<DishCard
-  key={dish.id}
-  dish={dish}
-  quantity={quantities[dish.id] || 0}
-  onQuantityChange={(newQty) => onQuantityChange(dish.id, newQty)}
-/>
-```
-- `quantity`: dishes nobody has picked have no key yet, so `|| 0` turns `undefined` into `0`.
-- `onQuantityChange`: a small arrow function that already knows which dish it belongs to, so the card doesn't need to know about ids.
+**Sign up, step by step:**
+1. `AuthDialog` calls `authClient.signUp.email({ name, email, password })`.
+2. That sends `POST /api/auth/sign-up/email`.
+3. Better Auth hashes the password and inserts a `user`, an `account` and a `session` row.
+4. The response sets an **httpOnly cookie** with the session token. JavaScript can't read httpOnly cookies, so a malicious script can't steal it.
+5. `useSession()` in `App.jsx` updates, and the header re-renders with "Sign out".
 
-`{visibleDishes.length === 0 && …}` shows an empty message with a **Reset filters** button. The phone-only bar uses `sticky bottom-4`: it sticks to the bottom of the screen only while you're scrolling past the dish list, then stops.
+**Why the session survives a refresh:** the cookie stays in the browser. On load, `useSession()` calls
+`GET /api/auth/get-session`, the browser sends the cookie, and Better Auth finds the matching `session` row.
 
-Layout: `grid lg:grid-cols-[1fr_340px]` puts the dishes on the left and the thali on the right on desktop. On phones the thali sits underneath.
-
-### `src/components/MenuFilters.jsx`
-
-A **fully controlled** filter bar. It has no state; each control receives a value and an `on…Change` function from Menu.
-
-- **Tabs:** `onClick={() => onCourseChange(c.id)}`, with `aria-pressed` marking the active one.
-- **Veg switch:** `onClick={() => onVegOnlyChange(!vegOnly)}`
-- **Spice slider:** a controlled `<input>`:
-  ```jsx
-  <input type="range" min="0" max="3" value={maxSpice}
-         onChange={(e) => onMaxSpiceChange(Number(e.target.value))} />
-  ```
-  `e.target.value` is always a **string** (`"2"`), so `Number()` converts it before it's stored. `accent-chili` colours the slider.
-
-### `src/components/DishCard.jsx`
-
-This displays one dish.
-
-- The dotted line between name and price is an empty span with `flex-1 border-b-2 border-dotted`, so it fills the leftover space.
-- Optional items use `&&`: `{dish.chefsPick && <span>Chef's pick</span>}`.
-- When `quantity > 0`, the card gets a turmeric ring and "✓ On your leaf". This is styled from props, with no state.
-- It passes `value={quantity}` and `onChange={onQuantityChange}` down to `PortionStepper`.
-
-### `src/components/PortionStepper.jsx` ⭐ controlled component
-
-See [section 7](#7-how-the-controlled-components-work).
-
-### `src/components/Thali.jsx`
-
-This only **displays** `thali` (`{ items, plates, total }`).
-
-**Placing the bowls round the leaf:**
+**Protecting my own routes: `server/src/middleware/requireAuth.js`**
 ```js
-const angle = (i / items.length) * 2 * Math.PI - Math.PI / 2   // start at 12 o'clock
-const x = 50 + 33 * Math.cos(angle)
-const y = 50 + 33 * Math.sin(angle)
-<span style={{ left: `${x}%`, top: `${y}%` }} className="… transition-all duration-500 motion-safe:animate-pop" />
+const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) })
+if (!session) return res.status(401).json({ error: 'Please sign in first.' })
+req.user = session.user
+next()
 ```
-- Bowl `i` of `n` gets an equal slice of the circle: `cos` gives the horizontal position and `sin` the vertical one.
-- 50% is the centre and 33% is the radius.
-- When a bowl is added, the others **slide** to their new places (`transition-all`), and the new one **pops** in.
+`router.post('/', requireAuth, handler)`: the handler only runs for signed-in users, and it uses `req.user.id`
+(from the session, never from the request body) as the booking's owner.
 
-**Why `style` and not Tailwind?** Tailwind finds classes by reading the source code before the site runs. A value worked out at runtime, such as `left-[37.4%]`, never appears in the code, so its CSS would never be generated. Calculated numbers go in `style`.
+**Sign out:** `authClient.signOut()` → `POST /api/auth/sign-out` deletes the session row and clears the cookie.
 
-**The same reason explains `bowlStyle`.** It's a lookup of **complete** class strings (`'bg-chili text-paper'`) rather than something like `` `bg-${colour}` ``.
-
-### `src/components/Reserve.jsx`
-
-```js
-const [guests, setGuests]       = useState(2)
-const [seating, setSeating]     = useState('')
-const [tableId, setTableId]     = useState(null)
-const [submitted, setSubmitted] = useState(false)
-```
-
-**The seating is derived and self-correcting:**
-```js
-const options = seatings[service]
-const activeSeating =
-  options.find((s) => s.time === seating && !s.full)?.time
-  ?? options.find((s) => !s.full).time
-```
-If the stored seating isn't valid for the current service (for example, you picked 12:30 pm and then switched to dinner), it falls back to the first free seating.
-
-- `?.` (optional chaining) returns `undefined` instead of crashing when `.find()` finds nothing.
-- `??` (nullish coalescing) means "if the left side is undefined or null, use the right side".
-
-**The chosen table is validated on every render:**
-```js
-const picked = tables.find((t) => t.id === tableId)
-const chosenTable = picked && !booked.includes(picked.id) && picked.seats >= guests ? picked : null
-```
-Pick T4 (4 seats) and then raise guests to 5, and `chosenTable` becomes `null` straight away. The map un-highlights it and the button says "Pick a table first". No extra code or effect is needed, because the value is recalculated from current state every time.
-
-- **Guests:** `<PortionStepper value={guests} onChange={setGuests} min={1} max={6} label="Guests" />` is the same component as on the dish cards. Passing `setGuests` directly works because the stepper calls `onChange(newNumber)`.
-- **`handleSubmit`:** `event.preventDefault()` stops the browser reloading the page. Name, phone and date have `required`, so the browser checks them first. Then `setSubmitted(true)` shows the "Received" stamp.
-- **The ticket stub** reads `guests`, `activeSeating`, `chosenTable` and the `thali` prop, so it updates live.
-- **The notches:** the stub's `before:` and `after:` are dark circles half outside the stub, and `overflow-hidden` on the ticket clips them into half-moons.
-- **Name, phone and date are uncontrolled.** Nothing reads them until submit, so they don't need state. In Week 3, when they're sent to a backend, they'd get `value` and `onChange`.
-
-### `src/components/SeatMap.jsx`
-
-A **controlled** floor plan. It receives `selectedId` and calls `onSelect(id)`.
-
-```js
-function statusOf(table) {
-  if (booked.includes(table.id)) return 'booked'
-  if (table.seats < guests) return 'small'
-  if (table.id === selectedId) return 'selected'
-  return 'free'
-}
-```
-- The status picks the styles from the `look` object and sets `disabled` on taken or too-small tables.
-- Each table is a `<button>` placed with `style={{ left, top, width }}` in percentages and centred with `-translate-x-1/2 -translate-y-1/2`.
-- `Chairs` draws `seats / 2` dots above and below the table, using `Array.from({ length: count }, …)` to make an array of that length to `.map` over.
-- Each table has a full `aria-label` such as "Table T5, 6 seats, Courtyard, available", so the map works with a screen reader.
-
-### `src/components/Footer.jsx`
-
-Maps `hours` into table rows. The grid goes from 1 column to 2 at `sm:` to 3 at `lg:`. `[overflow-wrap:anywhere]` lets the long email address wrap instead of causing sideways scroll at 320px.
-
-### `src/components/ui.jsx`
-
-Small pieces used in several places:
-
-- `Container`: centred, max width, side padding. It takes `children` and extra `className`s.
-- `Eyebrow`: the small uppercase label with a line drawn by `before:`.
-- `DietMark`: the Indian veg (green dot) or non-veg (brown triangle) symbol.
-- `SpiceMeter`: three bars, filled up to the dish's spice level.
-- `Wave`: an SVG divider whose colour comes from `text-*`, because the path uses `fill="currentColor"`.
+**Other sites can't log in on your behalf:** Better Auth checks the request's `Origin` header against
+`trustedOrigins` and rejects anything else ("Invalid origin").
 
 ---
 
-## 6. How useState works here
+## 6. API routes
 
-```js
-const [vegOnly, setVegOnly] = useState(false)
-```
-1. `useState(false)` asks React to remember a value, starting at `false`.
-2. It gives back the current value (`vegOnly`) and a setter (`setVegOnly`).
-3. Calling `setVegOnly(true)` stores the new value **and re-runs the component function**.
-4. On that re-run, `vegOnly` is `true`, so `visibleDishes` is recalculated and the grid shows only veg dishes.
-
-**Rule I followed:** state holds only what the user chose. Everything that can be calculated from it is worked out on each render and never stored:
-
-| State (stored) | Derived (calculated each render) |
-|---|---|
-| `course`, `vegOnly`, `maxSpice`, `service` | `visibleDishes`, `counts` |
-| `quantities`, `service` | `thali` (items, plates, total) |
-| `seating`, `service` | `activeSeating`, `booked` |
-| `tableId`, `guests`, `booked` | `chosenTable` |
-
----
-
-## 7. How the controlled components work
-
-A **controlled component** has no state of its own. The parent passes in:
-
-- **`value`**: what to show
-- **`onChange`**: a function to call when the user wants something different
-
-The component displays `value` and reports changes; the **parent decides** what to store.
-
-### PortionStepper, step by step
-
-What happens when you press **+** on *Meen Oota*, currently at 1:
-
-```
-PortionStepper  calls  onChange(2)
-     ↓  (that onChange is DishCard's onQuantityChange)
-DishCard        calls  (newQty) => onQuantityChange(10, newQty)   from Menu
-     ↓  (Menu just passes App's function through)
-App             runs   updateQuantity(10, 2)
-                       setQuantities(prev => ({ ...prev, 10: 2 }))
-     ↓  state changed → App re-renders
-App             thali = getThali(...)   → new bowl, new total
-     ↓  props flow back down
-DishCard        gets quantity={2} → ring + "On your leaf"
-PortionStepper  gets value={2}    → shows 2
-Thali           gets new thali    → bowl pops in, bill updates
-Reserve         gets new thali    → ticket shows the pre-order
-```
-**Data goes down as props, and changes go up as function calls.**
-
-### Why the stepper doesn't have its own `useState`
-
-If each stepper stored its own count:
-
-1. The thali and the ticket couldn't see the numbers, so there'd be no total.
-2. Switching tabs removes the cards from the page, so their counts would be lost.
-3. It couldn't be reused for guests, because Reserve needs to read that number for the seat map.
-
-Because it's controlled, the same component works for **plates per dish** (min 0, max 9) and **number of guests** (min 1, max 6). `disabled={value <= min}` and `disabled={value >= max}` stop it going out of range.
-
-The other controlled components follow the same pattern: `ServiceToggle` (value + onChange), `MenuFilters` (three value/onChange pairs), `SeatMap` (selectedId + onSelect) and the spice `<input type="range">`.
-
----
-
-## 8. Tailwind patterns used
-
-| Pattern | Meaning | Example |
+| Method + path | Login? | Returns |
 |---|---|---|
-| Mobile-first | Unprefixed = all screens; `sm:` 640px+, `md:` 768px+, `lg:` 1024px+ | `grid gap-6 sm:grid-cols-2` |
-| Show/hide by size | | `hidden md:block`, `lg:hidden` |
-| Theme tokens | Classes made from `@theme` variables | `bg-page text-fg border-line` |
-| Opacity | `/90` = 90% opacity | `bg-page/90`, `text-cream/80` |
-| Arbitrary values | Any CSS value in `[]`; `_` stands for a space | `lg:grid-cols-[1fr_340px]`, `w-[calc(50%-4px)]` |
-| Arbitrary properties | A whole CSS declaration | `[overflow-wrap:anywhere]` |
-| Pseudo-elements | Replace `::before` / `::after` | `before:content-['✓'] before:text-turmeric` |
-| State variants | | `hover:`, `focus:`, `disabled:`, `enabled:hover:` |
-| Group hover | Style a child when its parent is hovered | `group` + `group-hover:bg-turmeric` |
-| Motion safety | Animate only if the user allows motion | `motion-safe:animate-pop` |
-| Screen-reader only | Hidden visually, still read aloud | `sr-only` |
-| Conditional classes | A ternary inside a template string | `` `${vegOnly ? 'bg-leaf' : 'bg-line'}` `` |
+| `GET /api/health` | no | `{ ok: true }` |
+| `GET /api/dishes` | no | the whole menu, as an array of dish objects |
+| `GET /api/tables` | no | the 9 dining tables |
+| `GET /api/bookings/taken?date=2026-10-23&seating=7:00 pm` | no | `{ taken: ['T2', 'T6'] }` (ids only, no personal info) |
+| `GET /api/bookings/mine` | **yes** | your upcoming bookings, with thali plates and total |
+| `POST /api/bookings` | **yes** | creates a booking (+ thali items) → `201` with the booking |
+| `DELETE /api/bookings/:id` | **yes** | cancels your own booking → `204` |
+| `/api/auth/*` | – | Better Auth: `sign-up/email`, `sign-in/email`, `sign-out`, `get-session` |
 
-**Avoiding horizontal scroll:**
-- `min-w-0` on flex and grid children so they can shrink.
-- `overflow-hidden` on the ticker and on the seat map.
-- Percentage-based positions on the floor plan.
-- Wrapping long links.
-- Rows of controls use `flex-wrap`.
+Errors always come back as JSON `{ error: '…' }` with a proper status:
+`400` bad input, `401` not signed in, `404` not found, `409` table already taken, `500` server error.
+
+**Things worth pointing out in `routes/bookings.js`:**
+- **Every value is checked again on the server** (date not in the past, seating exists, 1–6 guests, table big enough). The browser can't be trusted.
+- **`$1, $2` placeholders**, never string-gluing, so SQL injection isn't possible.
+- **A transaction** (`BEGIN` … `COMMIT` / `ROLLBACK`) saves the booking and its thali items together, or not at all.
+- **Postgres error `23505`** (unique violation) becomes a friendly `409 "someone just booked that table"`.
+- **`DELETE … WHERE id = $1 AND user_id = $2`**: you can only cancel your own bookings.
+
+---
+
+## 7. Running it locally
+
+You need Node 22+ and a Neon database (see step 1 of §8).
+
+```bash
+# 1. Server
+cd server
+npm install
+cp .env.example .env          # then fill in DATABASE_URL and BETTER_AUTH_SECRET
+npm run db:migrate            # create the tables
+npm run db:seed               # load the menu + floor plan
+npm run dev                   # API on http://localhost:3000 (restarts on save)
+
+# 2. Client (second terminal)
+cd client
+npm install
+npm run dev                   # site on http://localhost:5173
+```
+
+Open http://localhost:5173. Check the API on its own at http://localhost:3000/api/dishes.
+
+Generate a secret with `openssl rand -base64 32`.
+
+---
+
+## 8. Deploying (Neon → Railway → Vercel)
+
+The order matters: the server needs the database URL, Vercel needs the server URL, and the server needs the Vercel URL.
+
+### Step 1: Neon (database)
+1. Sign up at neon.tech → **New project** (pick a region near you, e.g. Singapore or Frankfurt).
+2. **Connect** → copy the connection string. Change `sslmode=require` at the end to `sslmode=verify-full`.
+3. Put it in `server/.env` as `DATABASE_URL`, then from `server/` run:
+   ```bash
+   npm run db:migrate && npm run db:seed
+   ```
+   In Neon's **Tables** view you should now see `dishes` with 14 rows.
+
+### Step 2: Push to GitHub
+```bash
+git status            # make sure no .env file is listed!
+git push
+```
+
+### Step 3: Railway (backend)
+1. railway.com → **New Project** → **Deploy from GitHub repo** → pick this repo.
+2. Service **Settings** → **Root Directory**: `server`. Railway runs `npm install` and then `npm start`.
+3. **Variables** → add:
+   - `DATABASE_URL`: the Neon string
+   - `BETTER_AUTH_SECRET`: a new random string (`openssl rand -base64 32`)
+   - `BETTER_AUTH_URL`: put `http://localhost:5173` for now; you'll change it in step 5
+   (Railway sets `PORT` itself.)
+4. **Settings** → **Networking** → **Generate Domain**. Open `https://<that-domain>/api/dishes`: you should see the menu as JSON.
+
+### Step 4: Vercel (frontend)
+1. Edit `client/vercel.json`: replace `YOUR-RAILWAY-APP.up.railway.app` with the Railway domain. Commit and push.
+2. vercel.com → **Add New… → Project** → import the repo.
+3. **Root Directory**: `client`. The framework is detected as Vite. **Deploy**.
+
+### Step 5: Connect the two
+1. Copy the Vercel production URL, e.g. `https://tamarind-and-tide.vercel.app` (no slash at the end).
+2. In Railway → **Variables**, set `BETTER_AUTH_URL` to it. Railway redeploys by itself.
+3. Open the Vercel URL and check the menu loads, then sign up, refresh (still signed in), book a table and sign out.
+
+**If something breaks:**
+- Menu says "Couldn't load": check `vercel.json` has the right Railway domain, and that `/api/dishes` works on Railway directly.
+- Login says "Invalid origin": `BETTER_AUTH_URL` on Railway doesn't exactly match the URL in the browser (`https`, no trailing `/`). Vercel *preview* URLs (with random letters) won't work; use the production one.
+- Anything else: open Railway → **Deployments** → **View logs**; server errors are printed there.
 
 ---
 
 ## 9. Likely assessment questions
 
-**What does useState do?**
-It gives a component memory between renders. Calling the setter stores the new value and makes React re-run the component, so the page updates.
+**Walk me through your folder structure.**
+Two apps in one repo. `client/` is the React site from Week 2, deployed to Vercel. `server/` is an Express API deployed
+to Railway. Inside the server, `src/index.js` builds the app and plugs in `auth.js` and the three route files;
+`db.js` is the database connection; `db/` holds the schema and seed scripts I run by hand.
 
-**How does your filter work?**
-Three states (`course`, `vegOnly`, `maxSpice`) store the choices. On every render, `dishes.filter(...)` keeps the dishes that pass all the checks, and `.map()` turns them into cards.
+**How is your database connected?**
+`server/src/db.js` creates a `pg.Pool` from `process.env.DATABASE_URL`. Every route imports `pool` and calls
+`pool.query(sql, values)`. Better Auth is given the same pool, so it uses the same Neon database.
 
-**Why isn't `visibleDishes` in state?**
-Because it can always be calculated from the filter state. Storing it too would create two copies of the same information that could disagree.
+**Where are your secrets, and how do you know they're not on GitHub?**
+In `server/.env` locally and in Railway's Variables when live. The root `.gitignore` has `.env` and `.env.*`.
+`git check-ignore -v server/.env` shows the rule that ignores it, and `git log --all -- server/.env` shows it was never committed.
 
-**What makes PortionStepper controlled?**
-It has no state. It shows `value` and calls `onChange(newNumber)`; the parent decides what to store.
+**What does the seed script do?**
+It loops over the Week 2 `dishes` and `tables` arrays and inserts each one. It uses `ON CONFLICT (id) DO UPDATE`,
+so running it twice updates rows instead of duplicating them.
 
-**Why are quantities in App and not Menu?**
-The ticket in `Reserve` also shows the thali, and App is the closest parent of both.
+**How does React get the data now?**
+`App.jsx` has a `useEffect` with `[]` that calls `getDishes()` once after the first render, then stores the result
+with `setDishes`. Before that, `menuStatus` is `'loading'`, so the menu shows "Loading the menu…".
 
-**Why `{ ...prev, [id]: qty }`?**
-React only notices a new object, so I copy the old one and change one key. I never mutate state.
+**How do you know who's signed in?**
+`authClient.useSession()` in `App.jsx`. It asks `/api/auth/get-session`, and the browser sends the session cookie automatically.
+`user` is passed to `Header` and `Reserve` as a prop.
 
-**What is `key` for?**
-It lets React match list items between renders. It must be unique and stable, so I use `dish.id`.
+**What stops someone booking as another user?**
+The server never reads a user id from the request. `requireAuth` gets the user from the session cookie, and the
+INSERT uses `req.user.id`.
 
-**How does dinner mode change the colours?**
-App sets `data-service="dinner"`, and a CSS rule redefines the colour variables. Every `bg-page` and `text-fg` class updates by itself.
+**What happens if two people book the same table at the same moment?**
+The `UNIQUE (table_id, booking_date, seating)` constraint lets only one INSERT succeed. The other gets Postgres
+error `23505`, which I turn into a `409` and show as "Sorry, someone just booked that table".
 
-**What happens if I pick a table and then add guests?**
-`chosenTable` is recalculated on every render. If the table is now too small, it becomes `null`, the map un-highlights it, and the button asks you to pick again.
+**Why is `express.json()` after the auth handler?**
+Better Auth reads the raw request body itself. If `express.json()` ran first, it would already have read it.
 
-**Why do the bowls use `style` instead of classes?**
-Their positions are calculated at runtime. Tailwind only generates classes it can see written in the source code.
+**What's a transaction and why use one?**
+A group of queries that all succeed or all fail. A booking with a thali is one `bookings` row plus several
+`booking_items` rows; if an item failed I don't want half a booking saved, so I `ROLLBACK`.
 
----
-
-## 10. Commit plan
-
-Small, real commits, each one typed and tested:
-
-1. `Scaffold Vite + React app`
-2. `Remove Vite demo files and old styles.css`
-3. `Install Tailwind and add brand colour and font tokens`
-4. `Add Container, Eyebrow and DietMark helpers`
-5. `Build Header with mobile menu state`
-6. `Build Hero and Today's Catch ticker`
-7. `Build About section with timeline`
-8. `Move dishes into src/data/menu.js`
-9. `Render menu grid from data with DishCard`
-10. `Add course tabs and veg filter with useState`
-11. `Add spice slider filter and tab counts`
-12. `Add PortionStepper controlled component`
-13. `Lift quantities to App and add getThali helper`
-14. `Build Thali leaf with bowls and bill`
-15. `Add lunch/dinner theme tokens and ServiceToggle`
-16. `Split menu by service and make text service-aware`
-17. `Add floor plan data and SeatMap component`
-18. `Build reservation ticket with seat-map booking`
-19. `Reuse PortionStepper for guest count`
-20. `Add footer and wave dividers`
-21. `Fix overflow at 320px and contrast in dinner mode`
+**What's the difference between 401 and 400?**
+401 = you're not signed in. 400 = you are, but what you sent is invalid.
