@@ -1,0 +1,36 @@
+// Photographic assets are presentation data. Prices and availability still come from Postgres.
+const files = {
+  15: 'dish-15-paneer-tikka',
+  16: 'dish-16-tandoori-jhinga',
+  17: 'dish-17-butter-chicken',
+  18: 'dish-18-dum-biryani',
+  19: 'dish-19-pumpkin-soup',
+  20: 'dish-20-lemon-herb-fish',
+  21: 'dish-21-herb-roast-chicken',
+  22: 'dish-22-chocolate-fondant',
+  23: 'dish-23-vegetable-dim-sum',
+  24: 'dish-24-chilli-chicken',
+  25: 'dish-25-hakka-noodles',
+  26: 'dish-26-kung-pao-chicken',
+  27: 'dish-27-burrata-salad',
+  28: 'dish-28-margherita-pizza',
+  29: 'dish-29-penne-arrabbiata',
+  30: 'dish-30-tiramisu',
+  1: 'dish-01-rava-fried-ladyfish',
+  2: 'dish-02-mushroom-ghee-roast',
+  3: 'dish-03-banana-flower-vada',
+  4: 'dish-04-prawn-sukka',
+  5: 'dish-05-goli-baje',
+  6: 'dish-06-kingfish-curry',
+  7: 'dish-07-kori-rotti',
+  8: 'dish-08-jackfruit-cashew-roast',
+  9: 'dish-09-coconut-stew-appam',
+  10: 'dish-10-meen-oota',
+  11: 'dish-11-coconut-payasam',
+  12: 'dish-12-banana-halwa-brulee',
+  13: 'dish-13-jaggery-kulfi',
+  14: 'dish-14-coffee-panna-cotta',
+}
+
+export const dishImage = (id) => files[id] ? `/images/dishes/${files[id]}.png` : null
+export const emptyThaliImage = '/images/dishes/empty-thali.png'

@@ -1,0 +1,105 @@
+{
+  "tool": "Built-in image_gen",
+  "assets": [
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-550bc67e-a108-4490-ac27-3fcfb09fa1ec.png",
+      "path": "public/images/chef-coastal.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: transparent character cutout for a restaurant scroll animation. A warm, confident Indian male chef in his late thirties wearing a clean ivory chef jacket with sleeves rolled to forearms and a deep navy linen apron, waist-up, front-facing, natural soft smile, looking slightly down toward his extended right hand. His right arm extends toward the left of the image with a naturally open flat upward-facing palm, elbow bent. The centre of the palm is at approximately 26 percent of image width and 65 percent of image height. That empty hand will later support a separately animated food plate. His other arm rests naturally near his waist. Entire head, forearms and hands in frame, realistic anatomy, five fingers per hand. The chef occupies the right half; leave clear transparent space to the left of his open palm. Soft warm studio light, realistic natural skin and linen detail. Vertical 4:5 composition, no food, no plate, no text, no logos, no kitchen, genuine transparent background. Fictional chef, not a real named person."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-939c3885-13bc-4332-a1a2-af038b106ca5.png",
+      "path": "public/images/tables/ocean-view.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: premium restaurant table-view preview, landscape 3:2. A romantic two-seat teak dining table dressed in natural linen, simple elegant cream ceramics and a small brass lamp, beside a floor-to-ceiling open window looking out over the Bay of Bengal coastline at blue hour. Warm amber interior, deep ocean blue outside, casuarina silhouettes and the horizon. Photograph from seated guest eye level, show the table and its exact view, calm uncluttered boutique coastal Indian restaurant design in Konark. No people, no text, no branding. This is an original fictional restaurant concept, not a real venue photograph."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-9dc31570-a3aa-4ecc-bcd7-6ec6442e686a.png",
+      "path": "public/images/tables/classic.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: premium restaurant table-view preview, landscape 3:2. An inviting four-seat round teak dining table in a sheltered courtyard dining room of a boutique coastal Indian restaurant. Comfortable woven chairs, ivory linen napkins, cream ceramics, a tiny brass lamp. Warm amber sconces on textured Odisha sandstone, tropical plants and softly lit arched openings behind it, a relaxed intimate setting. Photograph from seated guest eye level, show the table and sheltered courtyard view. Rich navy, natural stone and warm timber palette. No people, no text, no branding. This is an original fictional restaurant concept, not a real venue photograph."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-0354da5a-26b1-40ba-9417-0a8df5d8f14a.png",
+      "path": "public/images/tables/chefs-counter.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: premium restaurant table-view preview, landscape 3:2. Two comfortable woven bar chairs at a refined teak chef's counter in a boutique coastal Indian restaurant. Individual linen place settings and ivory ceramics at the counter. Beyond, a softly glowing open kitchen with warm brass details, handmade tile, copper cookware and tasteful soft practical lighting, no chefs or diners visible. Photograph from the guest's eye level, intimate view of the kitchen craftsmanship. Deep ocean blue and warm amber tones, realistic premium hospitality photography. No text, no branding. This is an original fictional restaurant concept, not a real venue photograph."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-a22451d1-a33a-4b61-a1c6-6a7d05196573.png",
+      "path": "public/images/dishes/dish-15-paneer-tikka.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: charred paneer tikka cubes with red peppers and onions, mint chutney and lemon in a small brass-rimmed charcoal ceramic plate. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-15ca9fa4-ad40-473e-af2e-3e8dd9b8b9ab.png",
+      "path": "public/images/dishes/dish-16-tandoori-jhinga.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: six beautifully charred tandoori jumbo prawns, saffron-red yogurt spice crust, a small mint chutney smear, charred lime and delicate coriander, on an oval charcoal ceramic plate. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-b1a62682-f9b0-4284-b2ee-bab7eac3f731.png",
+      "path": "public/images/dishes/dish-17-butter-chicken.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: silky orange-red butter chicken curry in a low brass bowl, cream swirl and crushed kasuri methi, two small folded naan on the side as part of the same isolated serving. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-4d555799-0a9d-428e-94eb-660b6a3e8a0b.png",
+      "path": "public/images/dishes/dish-18-dum-biryani.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: fragrant chicken dum biryani with long separate saffron and white rice grains, caramelised onions, mint and a chicken piece, served in a shallow bronze bowl with a small raita bowl beside it. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-a7fb83bd-f259-467f-aecd-934c7104235a.png",
+      "path": "public/images/dishes/dish-19-pumpkin-soup.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: velvety roasted pumpkin soup in a warm ivory wide ceramic bowl, a small cream swirl, toasted pumpkin seeds and two crisp sourdough croutons. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-faab7641-3b15-4a43-9b02-3a18e2d86cf9.png",
+      "path": "public/images/dishes/dish-20-lemon-herb-fish.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: a beautifully grilled boneless white fish fillet, golden sear marks, lemon butter, baby potatoes and green beans arranged on an oval ivory ceramic plate. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-3e4b06a5-b357-4963-9e22-881ed2fe5bc6.png",
+      "path": "public/images/dishes/dish-21-herb-roast-chicken.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: golden roasted chicken supreme with crisp skin, a small mound of mashed potato, roasted carrots, green beans and a glossy pan jus on an ivory ceramic plate. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-6cfc56e1-82f0-431b-9001-8695ccb7e93c.png",
+      "path": "public/images/dishes/dish-22-chocolate-fondant.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: one dark chocolate lava cake broken open slightly with molten chocolate, a scoop of vanilla ice cream and a few berries on a small ivory ceramic dessert plate. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-245e1023-016a-4634-aa94-a6707fe06788.png",
+      "path": "public/images/dishes/dish-23-vegetable-dim-sum.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: six delicate translucent steamed vegetable dumplings with finely pleated wrappers, a tiny chilli oil dip, arranged in an open bamboo steamer without a lid. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-4d9f9550-a166-4a80-92e1-ea8685ad8873.png",
+      "path": "public/images/dishes/dish-24-chilli-chicken.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: glossy Indo-Chinese chilli chicken bites with red and green peppers, spring onions and toasted sesame in a low charcoal ceramic bowl. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-fb9f7cab-7360-4d65-8da0-388b564a25a9.png",
+      "path": "public/images/dishes/dish-25-hakka-noodles.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: fine stir-fried Hakka noodles with carrot, shredded cabbage, green peppers and spring onions, lightly glossy wok finish in a low charcoal ceramic bowl. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-a8ab0fd2-2547-4000-b818-584b84fcf4bd.png",
+      "path": "public/images/dishes/dish-26-kung-pao-chicken.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: Sichuan-style kung pao chicken with roasted peanuts, dried red chillies, diced peppers and spring onions in a shallow charcoal ceramic bowl. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-2c93c5dc-0fb6-4baf-92e0-2b9d237f37e0.png",
+      "path": "public/images/dishes/dish-27-burrata-salad.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: a fresh burrata ball gently opened on colourful heirloom tomato slices, basil leaves, olive oil and a tiny balsamic drizzle on an ivory ceramic plate. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-3646229d-fc2c-48ee-b75b-e59fe60f34f0.png",
+      "path": "public/images/dishes/dish-28-margherita-pizza.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: a whole Neapolitan margherita pizza with airy leopard-spotted charred crust, bright tomato sauce, melted mozzarella and fresh basil, on a slim round wooden pizza board. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-d8e077d5-e648-448b-bfb1-ea8bd1077bb2.png",
+      "path": "public/images/dishes/dish-29-penne-arrabbiata.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: ridged penne pasta coated in bright red slow-cooked tomato and chilli sauce, a few torn basil leaves and a light scattering of vegetarian hard cheese in an ivory ceramic pasta bowl. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    },
+    {
+      "source": "/Users/romanparwez/.codex/generated_images/01a1738e-723c-71a3-8b3c-9661d51fe680/exec-f9d29cc0-4cad-4bcf-9ac4-4d4fb42fc94a.png",
+      "path": "public/images/dishes/dish-30-tiramisu.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: isolated food photograph for a premium restaurant menu and animated plate builder. Primary request: one neat square slice of tiramisu with visible coffee-soaked cake and mascarpone layers, dusted cocoa and a tiny coffee bean garnish on a small ivory ceramic dessert plate. Viewpoint: elevated almost overhead, entire serving and plate visible, centred with generous transparent margin, soft studio lighting from upper left, natural appetising food texture and realistic proportions. No table, no background, no hands, no lettering, no watermark, no cut-off dish, no other food. A genuine transparent background with clean natural edges. Square composition."
+    }
+  ]
+}

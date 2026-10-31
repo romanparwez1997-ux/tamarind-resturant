@@ -1,0 +1,15 @@
+{
+  "tool": "Built-in image_gen",
+  "assets": [
+    {
+      "path": "public/images/konark-restaurant.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: full-width cinematic website background, 16:9 landscape. Primary request: a sea-facing boutique coastal restaurant in Konark, Odisha, India, photographed from a low aerial camera approaching from the beach at blue hour just after sunset. Scene: the Bay of Bengal and gentle white surf on a broad sandy beach occupy the left and lower foreground; a refined low-rise restaurant with warm amber-lit floor-to-ceiling glass, a shaded teak terrace, a few linen-covered tables and subtle Odisha stonework occupies the central-right midground. Casuarina trees and restrained tropical planting. Composition: an immersive establishing shot with the restaurant's glass entrance at approximately 65% horizontal and 55% vertical, so a slow digital camera push into that point feels natural. Plenty of atmospheric dark blue sea and sky in the left half for white editorial text. Camera looks toward the restaurant from the shoreline, realistic proportions, natural photographic detail, premium travel editorial lighting, deep sea blue, warm sand and soft brass highlights. No text, no logos, no watermarks, no people in the foreground, no fantasy architecture. This is a fictional restaurant concept, not a photograph of an actual establishment."
+    }
+  ],
+  "video": {
+    "path": "public/videos/konark-ocean.mp4",
+    "creator": "ArtHouse Studio",
+    "source": "https://www.pexels.com/video/aerial-view-of-ocean-waves-4631568/",
+    "license": "https://www.pexels.com/license/"
+  }
+}

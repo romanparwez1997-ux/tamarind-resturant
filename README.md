@@ -1,331 +1,242 @@
-# Tamarind & Tide: full stack
+# Tamarind & Tide
 
-Assignment 3: my React + Tailwind restaurant site now has a real backend behind it.
+A coastal restaurant site built with Next.js App Router, React, Tailwind CSS, Better Auth and PostgreSQL (Neon). The frontend and API now run as one JavaScript application.
 
-- **Frontend:** Vite + React + Tailwind (`client/`)
-- **Backend:** Node.js + Express (`server/`)
-- **Hosting:** both on **Vercel**, as two *services* in one project (`vercel.json`)
-- **Database:** Postgres on **Neon**, queried with the `pg` library (plain SQL)
-- **Auth:** **Better Auth** with email + password and cookie sessions
+## Run locally
 
-Live site: `https://YOUR-SITE.vercel.app` · API: `https://YOUR-SITE.vercel.app/api/dishes`
-
-No TypeScript. Frontend details from Assignment 2 are in [docs/week2-frontend.md](docs/week2-frontend.md).
-
----
-
-## Contents
-
-1. [Assignment checklist](#1-assignment-checklist)
-2. [Folder structure](#2-folder-structure)
-3. [How a request travels](#3-how-a-request-travels)
-4. [The database schema in plain English](#4-the-database-schema-in-plain-english)
-5. [How auth works](#5-how-auth-works)
-6. [API routes](#6-api-routes)
-7. [Running it locally](#7-running-it-locally)
-8. [Deploying (Neon → Vercel)](#8-deploying-neon--vercel)
-9. [Likely assessment questions](#9-likely-assessment-questions)
-
----
-
-## 1. Assignment checklist
-
-| Requirement | Where |
-|---|---|
-| Split into client and server | `client/` (React) and `server/` (Express), each with its own `package.json` |
-| Free Postgres database + schema | Neon. All tables are in `server/db/schema.sql`, created by `npm run db:migrate` |
-| Users table handled by the auth library | `user`, `session`, `account`, `verification` in `schema.sql`, used by Better Auth |
-| Product/items table | `dishes` (the menu), plus `dining_tables`, `bookings`, `booking_items` |
-| Secrets in `.env`, never committed | `server/.env` (git-ignored by the root `.gitignore`); `server/.env.example` shows the names only |
-| Week 2 hardcoded data moved into the DB with a seed script | Arrays moved to `server/db/seed-data.js`; `npm run db:seed` runs `server/db/seed.js` |
-| At least one API route returning JSON | `GET /api/dishes` (and 6 more, see [§6](#6-api-routes)) |
-| Real signup / login / sessions | Better Auth (`server/src/auth.js`), popup in `client/src/components/AuthDialog.jsx` |
-| UI reflects signed-in state | Header shows **Sign in**, or **Hi, Asha · Sign out**; booking button says **Sign in to book** |
-| Sessions survive a refresh | Session token lives in an httpOnly cookie; `useSession()` re-checks it on load |
-| React uses the real API | `client/src/lib/api.js`; `App.jsx` fetches dishes, `Reserve.jsx` fetches tables and bookings |
-| Live on the internet | Vercel (frontend + backend, one project) + Neon (database) |
-
----
-
-## 2. Folder structure
-
-```
-tamarind-and-tide/
-├─ .gitignore                 ignores node_modules, dist and every .env
-├─ vercel.json                deploys client/ and server/ together; /api/* → server, rest → client
-├─ README.md                  this file
-├─ docs/week2-frontend.md     the Assignment 2 write-up (components, state, Tailwind)
-│
-├─ client/                    THE FRONTEND (Vite + React + Tailwind)
-│  ├─ vite.config.js          dev proxy: /api/* → http://localhost:3000
-│  └─ src/
-│     ├─ App.jsx              fetches the menu, holds the session, opens the sign-in popup
-│     ├─ lib/
-│     │  ├─ api.js            one function per API route (getDishes, createBooking …)
-│     │  └─ authClient.js     Better Auth's React client (useSession, signIn, signUp, signOut)
-│     ├─ components/
-│     │  ├─ AuthDialog.jsx    NEW: sign-in / create-account popup
-│     │  ├─ Header.jsx        now shows Sign in / Sign out
-│     │  ├─ Menu.jsx          now gets dishes as a prop (plus loading / error text)
-│     │  ├─ Reserve.jsx       now loads tables + taken tables, saves bookings, lists "your bookings"
-│     │  └─ …                 everything else is unchanged from Week 2
-│     └─ data/                only fixed text and labels are left here
-│
-└─ server/                    THE BACKEND (Node + Express)
-   ├─ .env.example            which secrets are needed (copy to .env)
-   ├─ package.json            scripts: dev, start, db:migrate, db:seed
-   ├─ db/
-   │  ├─ schema.sql           every table: CREATE TABLE IF NOT EXISTS …
-   │  ├─ migrate.js           runs schema.sql against the database
-   │  ├─ seed-data.js         the Week 2 dishes + tables arrays
-   │  └─ seed.js              inserts seed-data.js into the database
-   └─ src/
-      ├─ index.js             creates the Express app, mounts auth + routes, listens on PORT
-      ├─ db.js                the Postgres connection pool
-      ├─ auth.js              Better Auth setup
-      ├─ middleware/
-      │  └─ requireAuth.js    blocks a route unless there's a valid session
-      └─ routes/
-         ├─ dishes.js         GET /api/dishes
-         ├─ tables.js         GET /api/tables
-         └─ bookings.js       taken tables, my bookings, create, cancel
-```
-
-**Why `db/` and `src/` are separate in the server:** `src/` is the app that runs on Vercel.
-`db/` holds one-off scripts I run by hand to set up or refill the database.
-
----
-
-## 3. How a request travels
-
-```
- Browser (https://my-site.vercel.app)
-    │  fetch('/api/dishes')                      same site, so the cookie is sent
-    ▼
- Vercel ── vercel.json: /api/* ──► "server" service: Express (server/src/index.js)
-                                      │  app.use('/api/dishes', dishesRouter)
-                                      ▼
-                                   routes/dishes.js
-                                      │  pool.query('SELECT … FROM dishes')
-                                      ▼
-                                   Neon Postgres
-                                      │  rows
-                                      ▼
-                                   res.json(rows)  ──►  back to the browser as JSON
-```
-
-Every other path (`/`, `/assets/…`) goes to the `client` service, which serves the built React files.
-Locally it's the same, except Vite's dev server (`vite.config.js`) does the `/api` forwarding.
-
-**Why one domain for both?** The site and the API share an address, so the login cookie is a normal
-*first-party* cookie. If the API lived on a different website, its cookie would be *third-party*, and browsers
-(Safari especially) block those, so you'd be logged out on every refresh. It also means no CORS setup is needed.
-
----
-
-## 4. The database schema in plain English
-
-All of it is in [`server/db/schema.sql`](server/db/schema.sql).
-
-```
- user ──< session            one user can be logged in on many browsers
-  │  └──< account            one user has a login method (email + hashed password)
-  │
-  └──< bookings >── dining_tables     a booking is made by one user, for one table
-           │
-           └──< booking_items >── dishes     a booking can pre-order many dishes
-```
-(`──<` means "one to many".)
-
-**Auth tables (Better Auth fills these in, I don't write to them):**
-
-- **`user`**: one row per person who signed up: id, name, email (unique).
-- **`session`**: one row per signed-in browser. `token` is what's stored in the cookie; `expiresAt` is 7 days later. Signing out deletes the row.
-- **`account`**: how the user logs in. For email login, `password` holds a **hash**, never the real password.
-- **`verification`**: short-lived codes (e.g. password reset). Required by Better Auth even if unused.
-
-**My tables:**
-
-- **`dishes`**: the menu. Each row is one dish with its price (whole rupees), course, lunch/dinner/both, veg, spice 0–3, and an optional tag. `CHECK` rules stop bad data, e.g. spice must be 0–3.
-- **`dining_tables`**: the 9 tables in the room: how many seats, which zone, and where to draw it on the floor plan (`x`, `y` in %).
-- **`bookings`**: a reservation. It links to the **user** who made it and the **table** booked, plus date, seating, guests and contact details. `UNIQUE (table_id, booking_date, seating)` means the database itself refuses a double booking.
-- **`booking_items`**: the thali pre-ordered with a booking: one row per dish with how many plates. It's a *join table* between bookings and dishes.
-
-**Foreign keys** (`REFERENCES`) make sure a booking can't point at a user or table that doesn't exist.
-`ON DELETE CASCADE` means deleting a booking also deletes its items, and deleting a user deletes their sessions and bookings.
-
----
-
-## 5. How auth works
-
-I use **Better Auth**. It handles password hashing, sessions and cookies, so I don't write that security code myself.
-
-**Server: `server/src/auth.js`**
-```js
-export const auth = betterAuth({
-  database: pool,                          // same Postgres pool as my routes
-  secret: process.env.BETTER_AUTH_SECRET,  // signs the cookie
-  baseURL: process.env.BETTER_AUTH_URL,    // the site's public address
-  trustedOrigins: [process.env.BETTER_AUTH_URL],
-  emailAndPassword: { enabled: true, minPasswordLength: 8 },
-})
-```
-`index.js` hands every `/api/auth/*` request to Better Auth: `app.all('/api/auth/*splat', toNodeHandler(auth))`.
-It's mounted **before** `express.json()` because Better Auth reads the request body itself.
-
-**Sign up, step by step:**
-1. `AuthDialog` calls `authClient.signUp.email({ name, email, password })`.
-2. That sends `POST /api/auth/sign-up/email`.
-3. Better Auth hashes the password and inserts a `user`, an `account` and a `session` row.
-4. The response sets an **httpOnly cookie** with the session token. JavaScript can't read httpOnly cookies, so a malicious script can't steal it.
-5. `useSession()` in `App.jsx` updates, and the header re-renders with "Sign out".
-
-**Why the session survives a refresh:** the cookie stays in the browser. On load, `useSession()` calls
-`GET /api/auth/get-session`, the browser sends the cookie, and Better Auth finds the matching `session` row.
-
-**Protecting my own routes: `server/src/middleware/requireAuth.js`**
-```js
-const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) })
-if (!session) return res.status(401).json({ error: 'Please sign in first.' })
-req.user = session.user
-next()
-```
-`router.post('/', requireAuth, handler)`: the handler only runs for signed-in users, and it uses `req.user.id`
-(from the session, never from the request body) as the booking's owner.
-
-**Sign out:** `authClient.signOut()` → `POST /api/auth/sign-out` deletes the session row and clears the cookie.
-
-**Other sites can't log in on your behalf:** Better Auth checks the request's `Origin` header against
-`trustedOrigins` and rejects anything else ("Invalid origin").
-
----
-
-## 6. API routes
-
-| Method + path | Login? | Returns |
-|---|---|---|
-| `GET /api/health` | no | `{ ok: true }` |
-| `GET /api/dishes` | no | the whole menu, as an array of dish objects |
-| `GET /api/tables` | no | the 9 dining tables |
-| `GET /api/bookings/taken?date=2026-10-23&seating=7:00 pm` | no | `{ taken: ['T2', 'T6'] }` (ids only, no personal info) |
-| `GET /api/bookings/mine` | **yes** | your upcoming bookings, with thali plates and total |
-| `POST /api/bookings` | **yes** | creates a booking (+ thali items) → `201` with the booking |
-| `DELETE /api/bookings/:id` | **yes** | cancels your own booking → `204` |
-| `/api/auth/*` | – | Better Auth: `sign-up/email`, `sign-in/email`, `sign-out`, `get-session` |
-
-Errors always come back as JSON `{ error: '…' }` with a proper status:
-`400` bad input, `401` not signed in, `404` not found, `409` table already taken, `500` server error.
-
-**Things worth pointing out in `routes/bookings.js`:**
-- **Every value is checked again on the server** (date not in the past, seating exists, 1–6 guests, table big enough). The browser can't be trusted.
-- **`$1, $2` placeholders**, never string-gluing, so SQL injection isn't possible.
-- **A transaction** (`BEGIN` … `COMMIT` / `ROLLBACK`) saves the booking and its thali items together, or not at all.
-- **Postgres error `23505`** (unique violation) becomes a friendly `409 "someone just booked that table"`.
-- **`DELETE … WHERE id = $1 AND user_id = $2`**: you can only cancel your own bookings.
-
----
-
-## 7. Running it locally
-
-You need Node 22+ and a Neon database (see step 1 of §8).
+Use Node.js 22 or later. From the repository root:
 
 ```bash
-# 1. Server
-cd server
 npm install
-cp .env.example .env          # then fill in DATABASE_URL and BETTER_AUTH_SECRET
-npm run db:migrate            # create the tables
-npm run db:seed               # load the menu + floor plan
-npm run dev                   # API on http://localhost:3000 (restarts on save)
-
-# 2. Client (second terminal)
-cd client
-npm install
-npm run dev                   # site on http://localhost:5173
+cp .env.example .env.local
+# Fill in DATABASE_URL and BETTER_AUTH_SECRET in .env.local.
+# Set BETTER_AUTH_URL=http://localhost:3000.
+npm run dev
 ```
 
-Open http://localhost:5173. Check the API on its own at http://localhost:3000/api/dishes.
+Open http://localhost:3000. Development and production builds use the supported Webpack option because Turbopack worker ports are restricted in this environment. The migration copies the existing local server environment into `.env.local` when that file does not already exist. The previous `server/.env` is no longer used. Both are git-ignored.
 
-Generate a secret with `openssl rand -base64 32`.
+Existing users, dishes and bookings remain in the same database. Apply schema updates, including the payment tables, with:
 
----
+```bash
+npm run db:migrate
+```
 
-## 8. Deploying (Neon → Vercel)
+For a new database, also run `npm run db:seed` to add the menu and dining tables.
 
-### Step 1: Neon (database)
-1. Sign up at neon.tech → **New project**.
-2. **Connect** → copy the connection string (the *pooled* one, with `-pooler` in the host). Change `sslmode=require` to `sslmode=verify-full`.
-3. Put it in `server/.env` as `DATABASE_URL`, then from `server/` run:
-   ```bash
-   npm run db:migrate && npm run db:seed
+Database scripts use Next.js environment loading, including `.env.local`. Seeding updates the menu and table rows, so there is no need to rerun it for the framework migration.
+
+## Structure
+
+```text
+src/
+  app/
+    layout.jsx                 HTML shell, metadata and fonts
+    page.jsx                   Home page
+    globals.css                Tailwind and existing restaurant styles
+    api/
+      auth/[...all]/route.js    Better Auth GET/POST handler
+      dishes/route.js           Menu
+      tables/route.js           Floor plan
+      bookings/route.js         Create reservation
+      bookings/taken/route.js   Table availability
+      bookings/mine/route.js    Your upcoming reservations
+      bookings/[id]/route.js    Cancel your reservation
+      health/route.js           Database/configuration check
+      [...path]/route.js        JSON API 404
+  App.jsx                      Interactive client component
+  components/                  Existing restaurant components
+  data/                        Static labels and service times
+  lib/                         Browser API and auth clients
+  server/                      Database pool, auth and route helpers
+  utils.js                     Thali and formatting helpers
+db/                            SQL schema, seed data and migration scripts
+tests/                         Boundary tests and read-only HTTP smoke checks
+```
+
+`App.jsx` starts the client component tree so React hooks and browser events continue to work. `layout.jsx` and `page.jsx` are server components. API routes use native `Request` and `Response` objects in the Node.js runtime, replacing Express routers. There is no Vite proxy or separate API process.
+
+## Authentication and bookings
+
+Better Auth still manages the same `user`, `session`, `account` and `verification` tables. Requests go to `/api/auth/*` using same-origin cookies. Protected routes call `requireAuth(request)` to validate the real session and obtain the user ID. A browser-supplied user ID is never trusted.
+
+Reservations still validate table capacity, date, seating and quantities on the server. Booking and dish inserts share a database transaction. The unique database constraint prevents duplicate reservations for a table/date/seating. Cancellation and personal booking queries are restricted to the session owner. The development database pool is reused across hot reloads.
+
+## API
+
+| Method | URL | Login required |
+| --- | --- | --- |
+| GET | `/api/health` | No |
+| GET | `/api/dishes` | No |
+| GET | `/api/tables` | No |
+| GET | `/api/bookings/taken?date=2026-10-25&seating=7%3A00%20pm` | No |
+| GET | `/api/bookings/mine` | Yes |
+| POST | `/api/bookings` | Yes |
+| DELETE | `/api/bookings/:id` | Yes |
+| GET / POST | `/api/auth/*` | Managed by Better Auth |
+
+The existing frontend payloads and JSON responses are preserved. Errors use `{ error: '...' }` with HTTP 400, 401, 404, 409 or 500.
+
+## Checks
+
+```bash
+npm run lint
+npm test
+npm run build
+npm start
+# In another terminal, against the running app:
+npm run test:smoke
+```
+
+The smoke script checks page rendering, database-backed menu/table reads, session handling, authorization, availability validation and JSON 404s without creating accounts or bookings. To check reservations manually: sign in with an existing account, refresh, book an available table, check your upcoming bookings, and cancel that reservation. Test thali payments separately using the Stripe steps below.
+
+## Deploy on Vercel
+
+Use the repository root as the Vercel Root Directory and **Next.js** as the framework preset. This is now one service; the old multi-service `vercel.json` configuration has been removed. If the existing Vercel project has saved service settings or build overrides, remove those and use the Next.js defaults (`npm run build`).
+
+Set `DATABASE_URL`, `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` in Vercel environment variables. The auth URL must exactly match the public production origin (for example `https://your-site.vercel.app`). Keep these variables server-side; none need a `NEXT_PUBLIC_` prefix. Redeploy and check `/api/health`, login and booking behavior.
+
+## Stripe Checkout (Assignment 4)
+
+Thali payments and table reservations are separate. Pick dishes, click **Order this thali**, and sign in. The site's **Review & pay** page shows the saved dishes, quantities and total; **Continue to secure payment** opens Stripe's hosted test checkout. **Change your dishes** restores the owner's pending selection in the menu. Table reservations remain free and separate.
+
+### Local setup
+
+1. Create a Stripe account and select its test environment/sandbox. Copy the **test secret key** from its API keys page into `.env.local`:
+
+   ```dotenv
+   STRIPE_SECRET_KEY=sk_test_your_key
+   STRIPE_WEBHOOK_SECRET=whsec_from_the_next_step
+   BETTER_AUTH_URL=http://localhost:3000
    ```
-   In Neon's **Tables** view you should now see `dishes` with 14 rows.
 
-### Step 2: Push to GitHub
+   Never commit keys or paste them into source files. No publishable key is needed for this hosted Checkout redirect. The server rejects live keys and live payment events.
+
+2. Apply the schema from the repository root:
+
+   ```bash
+   npm run db:migrate
+   ```
+
+3. The [official Stripe CLI](https://docs.stripe.com/stripe-cli) is included as a development dependency. Keep this running in a separate terminal:
+
+   ```bash
+   npm run stripe:listen
+   ```
+
+   The helper loads your test key from `.env.local`, passes it privately through `STRIPE_API_KEY`, and forwards the checkout and failed-payment events to the localhost origin in `BETTER_AUTH_URL`. It saves the listener's signing secret to `STRIPE_WEBHOOK_SECRET` in `.env.local` and redacts secrets from terminal output. No separate CLI login is needed. A CLI listener secret is different from a Dashboard endpoint secret. Restart the app after changing environment variables.
+
+   To manage the CLI yourself instead, run `npx stripe login`, then `npx stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.expired,payment_intent.payment_failed --forward-to localhost:3000/api/stripe/webhook` and copy its signing secret into `.env.local` manually.
+
+4. Start the app:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Sign in, add a dish, click **Order this thali**, review the payment page, choose **Continue to secure payment**, and complete checkout using `4242 4242 4242 4242`, a future expiry date, any three-digit CVC and any requested test billing details. [Stripe test-card reference](https://docs.stripe.com/testing).
+
+6. The listener should show a successful webhook response. The success page should change from waiting to **Payment confirmed**, with the saved receipt and `paid` status. If the webhook is slow, it polls ten times, then offers **Check payment again**. A redirect alone never marks anything paid.
+
+A browser cancellation returns to `/checkout/cancel?order_id=...`, where the owner can return to the review page and resume the existing payment session. Returning from Stripe's cancellation link does not itself change payment status. Abandoned sessions become `expired` when their signed expiration event arrives.
+
+### Payment tables and routes
+
+| Table | Purpose |
+| --- | --- |
+| `orders` | One purchase, owned by a signed-in user: UUID, retry key, pending/paid/expired status, INR total in paise, Stripe session/payment-intent IDs and timestamps |
+| `order_items` | One row per purchased dish: dish reference, saved name, quantity and unit price in paise |
+
+`order_items` is the SQL equivalent of the assignment's `orderItems`. It follows this repository's snake_case table convention. `dishes.price` is in whole rupees; checkout multiplies it by 100. ₹420 becomes 42000 paise. Later changes to menu prices or names cannot change a saved receipt.
+
+| Method | Route | Behavior |
+| --- | --- | --- |
+| POST | `/api/checkout` | Requires a session and same-origin request; accepts `{ checkoutKey, items: [{ dishId, qty }] }`; returns `{ orderId, url }` |
+| GET | `/api/orders/:id` | Requires the owning user's session; returns order status and saved line items, with caching disabled |
+| POST | `/api/stripe/webhook` | Public to Stripe; verifies the raw payload signature before accessing order records |
+| GET | `/checkout?order_id=...` | Branded order review with dish photos, saved prices, total and a link to the existing Stripe Session |
+| GET | `/checkout/success?order_id=...` | Displays the owner's saved status and polls while pending |
+| GET | `/checkout/cancel?order_id=...` | Displays the order and offers resume payment while pending |
+
+The checkout service validates integer IDs, quantities and duplicate dishes. It ignores browser prices, totals and user IDs. It saves the pending order and snapshots in one transaction, then creates the real Stripe Session outside the transaction. A unique `(user_id, checkout_key)` constraint and Stripe idempotency key prevent retries of the same attempt from producing duplicate purchases. If Stripe times out, retrying uses the original order and original prices. A failed checkout call never sets `paid`.
+
+The webhook checks the signed event's application metadata, user ID, order ID, session ID, payment status, amount, currency and test-mode flag. It locks the order while updating it, handles duplicate deliveries safely, and never downgrades a paid order on a late expiration event. A paid event can arrive before checkout saves its session ID. Database failures return 500 so Stripe can retry. See [Stripe's signature guidance](https://docs.stripe.com/webhooks/signature).
+
+`/api/health` reports whether the test key and webhook signing secret are present, using booleans only. Those flags do not verify the credentials with Stripe. Both settings are required before checkout opens.
+
+### Verification
+
 ```bash
-git status            # make sure no .env file is listed!
-git push
+npm test
+npm run lint
+npm run build
+# Against a running app (read-only):
+npm run test:smoke
+# Database integration suite (temporary fixtures are created and removed):
+npm run test:payments
 ```
 
-### Step 3: Vercel
-1. vercel.com → **Add New… → Project** → import the repo. Leave **Root Directory** as the repo root:
-   the root `vercel.json` tells Vercel to build `client/` (Vite) and `server/` (Express) as two services.
-2. **Settings → Environment Variables** → add (for Production):
-   - `DATABASE_URL`: the Neon string
-   - `BETTER_AUTH_SECRET`: a new random string (`openssl rand -base64 32`)
-   - `BETTER_AUTH_URL`: the production URL, e.g. `https://tamarind-and-tide.vercel.app` (no `/` at the end)
-3. **Redeploy** (Deployments → ⋯ → Redeploy) so the server picks the variables up.
-4. Check `https://<your-site>/api/dishes` shows the menu as JSON, then open the site: sign up, refresh
-   (still signed in), book a table and sign out.
+The payment integration suite uses the configured database and the real Stripe SDK's signature implementation. It mocks Stripe API calls and checks price tampering, purchase snapshots, other-user lookups, concurrent retries, timed-out requests, duplicate events, invalid amounts/currencies/sessions, expiration and webhooks arriving before session persistence. It removes only its own generated fixture users, dishes and orders. These tests do **not** replace completing the real hosted checkout with the CLI listener running.
 
-**If something breaks:**
-- Menu says "Couldn't load": open `/api/dishes` directly; if that fails, the server can't reach the database (check `DATABASE_URL`).
-- Login says "Invalid origin": `BETTER_AUTH_URL` doesn't exactly match the URL in the browser (`https`, no trailing `/`). Vercel *preview* URLs (with random letters) won't work; use the production one.
-- Anything else: Vercel → your project → **Logs**; server errors are printed there.
+### Deployment
 
----
+Keep using **test** keys on the deployed site for this assignment; a deployed URL does not require real-money live mode.
 
-## 9. Likely assessment questions
+1. Add `STRIPE_SECRET_KEY` to Vercel using the Stripe test key, and set `BETTER_AUTH_URL` to the exact public HTTPS origin.
+2. In Stripe's test environment, register `https://YOUR-SITE/api/stripe/webhook` as a webhook endpoint for `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired` and `payment_intent.payment_failed`.
+3. Put that endpoint's own signing secret in Vercel's `STRIPE_WEBHOOK_SECRET` and redeploy. The local CLI secret does not belong here.
+4. Run the schema migration against the deployed app's database, then complete the hosted test-card flow on the deployed URL and check Stripe's event delivery log.
 
-**Walk me through your folder structure.**
-Two apps in one repo. `client/` is the React site from Week 2, deployed to Vercel. `server/` is an Express API. Both deploy to
-one Vercel project as two services (root `vercel.json`). Inside the server, `src/index.js` builds the app and plugs in `auth.js` and the three route files;
-`db.js` is the database connection; `db/` holds the schema and seed scripts I run by hand.
+### Assessment walkthrough
 
-**How is your database connected?**
-`server/src/db.js` creates a `pg.Pool` from `process.env.DATABASE_URL`. Every route imports `pool` and calls
-`pool.query(sql, values)`. Better Auth is given the same pool, so it uses the same Neon database.
+Show the menu, sign in, pick dishes and click **Order this thali**. Explain that the API reads prices from `dishes`, saves a pending `orders` row plus its `order_items`, and creates a Checkout Session. Pay using the test card, show the verified webhook in the CLI and the paid success page, then show the database rows. Explain that the success page only reads status; the signature-verified webhook is the only application code that writes `paid`. See [the assessment guide](docs/PAYMENTS_ASSESSMENT.md) for file paths and database queries.
 
-**Where are your secrets, and how do you know they're not on GitHub?**
-In `server/.env` locally and in Vercel's Environment Variables when live. The root `.gitignore` has `.env` and `.env.*`.
-`git check-ignore -v server/.env` shows the rule that ignores it, and `git log --all -- server/.env` shows it was never committed.
+The older files in `docs/` describe the pre-migration Vite/Express project and are retained as historical assessment notes. Use this README for the current setup and file paths.
 
-**What does the seed script do?**
-It loops over the Week 2 `dishes` and `tables` arrays and inserts each one. It uses `ON CONFLICT (id) DO UPDATE`,
-so running it twice updates rows instead of duplicating them.
+## Visual design and animation
 
-**How does React get the data now?**
-`App.jsx` has a `useEffect` with `[]` that calls `getDishes()` once after the first render, then stores the result
-with `setDishes`. Before that, `menuStatus` is `'loading'`, so the menu shows "Loading the menu…".
+The site follows a Konark coastline: locally hosted ocean footage crossfades into a generated restaurant exterior, the camera pushes toward the terrace as you scroll, and a separate dining-room/food scene introduces the menu. Sea blue, sand and brass carry through both lunch and dinner palettes. Dish photographs assemble in the existing live thali. Motion respects reduced-motion preferences and can be paused from the fixed control or footer. See [design notes](docs/DESIGN_NOTES.md) and [coastal asset prompts and video credits](docs/KONARK_ASSET_PROMPTS.json).
 
-**How do you know who's signed in?**
-`authClient.useSession()` in `App.jsx`. It asks `/api/auth/get-session`, and the browser sends the session cookie automatically.
-`user` is passed to `Header` and `Reserve` as a prop.
 
-**What stops someone booking as another user?**
-The server never reads a user id from the request. `requireAuth` gets the user from the session cookie, and the
-INSERT uses `req.user.id`.
+## Accounts and email confirmation
 
-**What happens if two people book the same table at the same moment?**
-The `UNIQUE (table_id, booking_date, seating)` constraint lets only one INSERT succeed. The other gets Postgres
-error `23505`, which I turn into a `409` and show as "Sorry, someone just booked that table".
+`/sign-in` has an animated coastal sign-in/create-account screen. `/account` provides private, paginated order history; paid, awaiting-payment and unsuccessful filters; name editing; email verification and changes; and password changes. Order history reads purchase snapshots, rather than current menu prices. A failed card attempt is recorded by a signed `payment_intent.payment_failed` webhook and remains retryable. It cannot undo a paid order. An abandoned checkout is shown as expired once Stripe sends its expiration event.
 
-**Why is `express.json()` after the auth handler?**
-Better Auth reads the raw request body itself. If `express.json()` ran first, it would already have read it.
+For email delivery, add these **privately** to `.env.local` and restart the app:
 
-**What's a transaction and why use one?**
-A group of queries that all succeed or all fail. A booking with a thali is one `bookings` row plus several
-`booking_items` rows; if an item failed I don't want half a booking saved, so I `ROLLBACK`.
+```dotenv
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM="Tamarind & Tide <hello@your-verified-domain.example>"
+```
 
-**What's the difference between 401 and 400?**
-401 = you're not signed in. 400 = you are, but what you sent is invalid.
+Use an actual sender on your verified Resend domain, following [Resend domain setup](https://resend.com/docs/dashboard/domains/introduction). The example address above is a placeholder. Set both variables in your hosting environment too. No browser-accessible key is needed.
+
+A verification link expires after one hour. Email changes do not update the account until the new address is verified. A verified current address must also approve the change first. Password changes require the current password and sign out other sessions. When delivery is unconfigured, the account page explains that email actions are unavailable; it never pretends an address is verified. Actual inbox delivery still needs to be checked after configuring Resend.
+
+| Method | URL | Login required |
+| --- | --- | --- |
+| GET | `/api/orders?page=1&status=all` | Yes; only the session owner's orders |
+| GET | `/api/account/settings` | Yes; email availability only |
+
+`status` accepts `all`, `paid`, `pending` or `unsuccessful`. Name, email and password changes use Better Auth's protected endpoints. Additional checks:
+
+```bash
+npm run test:payments
+npm run test:accounts
+```
+
+These integration checks create disposable fixtures in the configured database and remove only their own fixtures. Account verification emails are captured in memory for tests; no mail is sent. The footer credits Roman Parwez and embeds an interactive Google map centred on Konark, Odisha. It is an area map until a precise restaurant address is supplied.
+
+## Living restaurant update
+
+The menu now contains **30 dishes** across Indian, Continental, Chinese and Italian cuisines, with cuisine/course filters, search and matching photographs. Apply `npm run db:migrate` followed by `npm run db:expand-menu` when deploying this update. Existing product prices and saved receipts are preserved.
+
+Reservations have moved to **`/reservations`** with Ocean View, Classic and Chef’s Counter setting previews, live availability, table selection, floor plan and a personal welcome note after a confirmed booking. The home page introduces the settings and links to this separate flow. Shared ocean backgrounds and photographic motion continue across account, sign-in and payment routes. The Chef’s kiss scene animates an orderable signature dish into the chef’s palm as you scroll. The site-wide pause control persists through navigation and respects reduced-motion preferences.
+
+See [implementation and design notes](docs/LIVING_EXPERIENCE.md) and [new image paths and prompts](docs/EXPERIENCE_ASSET_PROMPTS.json). Run `npm run test:bookings` against the running app for the disposable reservation integration checks.
+
+### Order cancellation and refunds
+
+Use **My account → Your orders → Cancel order & refund**, or cancel from the order receipt. Unpaid checkouts are closed at Stripe; paid orders receive a full test-mode refund to the original payment method. Status updates, original receipts and purchase amounts remain visible. Table reservations are separate.
+
+Run `npm run db:migrate`, then restart `npm run stripe:listen` to include refund webhook events. On a deployed test site, enable `refund.created`, `refund.updated` and `refund.failed` on the existing webhook. Validate with `npm run test:refunds`. See [the implementation and testing notes](docs/ORDER_REFUNDS.md).
